@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CartProvider } from './context/CartContext';
+import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { TopAnnouncement } from './components/layout/TopAnnouncement';
 import { Header } from './components/layout/Header';
@@ -19,14 +19,21 @@ import { ProductQuickView } from './components/product/ProductQuickView';
 import { CartDrawer } from './components/cart/CartDrawer';
 import { WishlistDrawer } from './components/cart/WishlistDrawer';
 import { CheckoutModal } from './components/cart/CheckoutModal';
-import type { Product, RoomType } from './types';
+import { MtnSandboxTestPanel } from './components/admin/MtnSandboxTestPanel';
+import { ToastContainer, type ToastMessage } from './components/common/Toast';
+import type { Product, RoomType, DirectBuyItem, ColorOption } from './types';
 import { PRODUCTS } from './data/products';
 
 export function AppContent() {
+  const { openCart } = useCart();
   const [activeRoom, setActiveRoom] = useState<RoomType>('all');
   const [activeMobileTab, setActiveMobileTab] = useState<'home' | 'categories' | '3d' | 'wishlist' | 'cart'>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isSandboxTestOpen, setIsSandboxTestOpen] = useState(false);
+
+  // Direct Buy Now Item State (Bypasses cart when Buy Now is clicked)
+  const [directBuyItem, setDirectBuyItem] = useState<DirectBuyItem | null>(null);
 
   // 3D Inspector Modal State
   const [selected3DProduct, setSelected3DProduct] = useState<Product | null>(null);
@@ -35,6 +42,18 @@ export function AppContent() {
   // Quick View Modal State
   const [selectedQuickViewProduct, setSelectedQuickViewProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+  // Toast notification state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (toast: { title: string; description?: string; type?: 'cart' | 'wishlist' }) => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
+    setToasts((prev) => [...prev, { ...toast, id }]);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   const handleOpen3D = (product: Product) => {
     setSelected3DProduct(product);
@@ -67,16 +86,47 @@ export function AppContent() {
     }
   };
 
+  // Direct Buy Now handler from ProductCard
+  const handleBuyNowFromCard = (product: Product) => {
+    const defaultColor = product.colors[0] || { name: 'Royal Plum', hex: '#3B184F', threeColor: 0x3b184f };
+    setDirectBuyItem({
+      product,
+      quantity: 1,
+      selectedColor: defaultColor,
+    });
+    setIsCheckoutOpen(true);
+  };
+
+  // Direct Buy Now handler from QuickView modal
+  const handleBuyNowFromQuickView = (product: Product, quantity: number, selectedColor: ColorOption) => {
+    setDirectBuyItem({
+      product,
+      quantity,
+      selectedColor,
+    });
+    setIsCheckoutOpen(true);
+  };
+
+  // Standard cart checkout handler
+  const handleProceedFromCartDrawer = () => {
+    setDirectBuyItem(null); // Use standard cart items
+    setIsCheckoutOpen(true);
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 1. Top Announcement Bar */}
-      <TopAnnouncement onShopDeals={handleSelectOffers} />
+      <TopAnnouncement
+        onShopDeals={handleSelectOffers}
+        onOpenSandboxPanel={() => setIsSandboxTestOpen(true)}
+      />
 
       {/* 2. Main Header with Search, Logo, Cart */}
       <Header
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         onSelectProduct={(p) => handleOpenQuickView(p)}
         onSelectRoom={handleSelectRoom}
+        onOpenSandboxPanel={() => setIsSandboxTestOpen(true)}
       />
 
       {/* 3. Navigation Bar (Mega Menu & Room Links) */}
@@ -88,7 +138,7 @@ export function AppContent() {
 
       {/* Main Page Sections */}
       <main style={{ flex: 1 }}>
-        {/* 4. Hero Section with Auto-scrolling Lookbook & 3D Studio */}
+        {/* 4. Hero Section with Cinematic Lookbook & 3D Studio */}
         <HeroSection
           onShopNow={(room) => handleSelectRoom(room || 'living')}
           onOpen3DStudio={handleOpenHero3D}
@@ -111,6 +161,8 @@ export function AppContent() {
           onSelectRoom={setActiveRoom}
           onOpen3D={handleOpen3D}
           onOpenQuickView={handleOpenQuickView}
+          onBuyNow={handleBuyNowFromCard}
+          onToast={addToast}
         />
 
         {/* 8. Value Proposition Dark Pill Bar */}
@@ -120,16 +172,21 @@ export function AppContent() {
         <DealOfTheWeek
           onOpen3D={handleOpen3D}
           onOpenQuickView={handleOpenQuickView}
+          onBuyNow={handleBuyNowFromCard}
+          onToast={addToast}
         />
 
-        {/* 10. VIP Newsletter Subscription with 10% Promo Code */}
+        {/* 10. VIP Newsletter Subscription with Promo Code */}
         <NewsletterVIP />
       </main>
 
       {/* 11. Footer */}
-      <Footer onSelectRoom={handleSelectRoom} />
+      <Footer
+        onSelectRoom={handleSelectRoom}
+        onOpenSandboxPanel={() => setIsSandboxTestOpen(true)}
+      />
 
-      {/* 12. Floating Glassmorphic Mobile Dock (Reference 2 Inspiration) */}
+      {/* 12. Floating Glassmorphic Mobile Dock */}
       <MobileFloatingDock
         activeTab={activeMobileTab}
         onSelectTab={setActiveMobileTab}
@@ -157,11 +214,14 @@ export function AppContent() {
         product={selectedQuickViewProduct}
         onClose={() => setIsQuickViewOpen(false)}
         onOpen3D={handleOpen3D}
+        onBuyNow={handleBuyNowFromQuickView}
+        onToast={addToast}
       />
 
       {/* Slide-out Cart Drawer */}
       <CartDrawer
-        onProceedToCheckout={() => setIsCheckoutOpen(true)}
+        onProceedToCheckout={handleProceedFromCartDrawer}
+        onExploreProducts={() => handleSelectRoom('all')}
       />
 
       {/* Slide-out Wishlist Drawer */}
@@ -169,10 +229,29 @@ export function AppContent() {
         onOpenProduct3D={handleOpen3D}
       />
 
-      {/* Multi-step Checkout Modal */}
+      {/* Multi-step Checkout Modal with MTN MoMo Sandbox Gateway */}
       <CheckoutModal
         isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
+        onClose={() => {
+          setIsCheckoutOpen(false);
+          setDirectBuyItem(null);
+        }}
+        directBuyItem={directBuyItem}
+        onClearDirectBuy={() => setDirectBuyItem(null)}
+        onOpenTestPanel={() => setIsSandboxTestOpen(true)}
+      />
+
+      {/* Developer MTN MoMo Sandbox Diagnostic & Testing Panel */}
+      <MtnSandboxTestPanel
+        isOpen={isSandboxTestOpen}
+        onClose={() => setIsSandboxTestOpen(false)}
+      />
+
+      {/* Floating Luxury Toasts */}
+      <ToastContainer
+        toasts={toasts}
+        onDismiss={dismissToast}
+        onOpenCart={openCart}
       />
     </div>
   );

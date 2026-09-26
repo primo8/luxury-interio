@@ -86,11 +86,58 @@ export interface CustomerDetails {
   fullName: string;
   email: string;
   phone: string;
+  province?: string;
+  district?: string;
+  sector?: string;
   address: string;
-  city: string;
-  country: string;
-  paymentMethod: 'card' | 'momo' | 'bank' | 'cash';
+  city?: string;
+  country?: string;
+  paymentMethod: 'momo' | 'card' | 'airtel' | 'cash';
   notes?: string;
+}
+
+export type PaymentStatus =
+  | 'PENDING'
+  | 'SUCCESSFUL'
+  | 'FAILED'
+  | 'REJECTED'
+  | 'EXPIRED'
+  | 'CANCELLED'
+  | 'UNKNOWN';
+
+export interface PaymentDiagnostic {
+  environment: string;
+  isConfigured: boolean;
+  missingKeys: string[];
+  mtnCurrency: string;
+  storeCurrency: string;
+  baseUrl: string;
+  hasCallbackUrl: boolean;
+  callbackUrl: string;
+  mode: 'LIVE_SANDBOX' | 'SIMULATED_SANDBOX_DEV';
+}
+
+export interface PaymentTransactionRecord {
+  paymentId: string;
+  orderId: string;
+  externalId: string;
+  mtnReferenceId: string;
+  amount: number;
+  currency: string;
+  phoneNumberMasked: string;
+  provider: string;
+  status: PaymentStatus;
+  createdAt: string;
+  updatedAt: string;
+  failureReason?: string;
+  itemsSummary: string;
+  financialTransactionId?: string;
+}
+
+export interface DirectBuyItem {
+  product: Product;
+  quantity: number;
+  selectedColor: ColorOption;
 }
 
 export interface Order {

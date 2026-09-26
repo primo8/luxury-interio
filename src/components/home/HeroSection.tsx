@@ -201,26 +201,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                  border: '1px solid rgba(212, 175, 55, 0.5)',
-                  color: '#d4af37',
+                  backgroundColor: 'rgba(212, 175, 55, 0.18)',
+                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                  color: 'var(--color-gold)',
                   padding: '6px 14px',
                   borderRadius: '20px',
                   fontSize: '0.74rem',
                   fontWeight: 800,
-                  letterSpacing: '1.2px',
+                  letterSpacing: '1.4px',
                   textTransform: 'uppercase',
                   backdropFilter: 'blur(8px)',
                 }}
               >
                 <Sparkles size={14} />
-                <span>{currentSlide.tag}</span>
+                <span>THE NEW FURNITURA COLLECTION</span>
               </div>
 
               <span
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#ffffff',
                   fontSize: '0.7rem',
                   fontWeight: 700,
@@ -239,19 +239,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
               key={currentSlide.id + '-title'}
               style={{
                 fontFamily: 'var(--font-serif)',
-                fontSize: 'clamp(2.2rem, 4.2vw, 3.6rem)',
+                fontSize: 'clamp(2.3rem, 4.4vw, 3.8rem)',
                 lineHeight: 1.12,
                 fontWeight: 700,
                 letterSpacing: '-0.5px',
-                marginBottom: '14px',
+                marginBottom: '16px',
                 color: '#ffffff',
-                textShadow: '0 2px 16px rgba(0,0,0,0.5)',
+                textShadow: '0 2px 18px rgba(0,0,0,0.5)',
                 animation: 'fadeIn 0.5s ease-out',
               }}
             >
-              {currentSlide.title} <br />
-              <span style={{ color: '#e0aaff', fontStyle: 'italic', fontWeight: 600 }}>
-                {currentSlide.highlightText}
+              Elegant Furniture <br />
+              <span style={{ color: 'var(--color-gold)', fontStyle: 'italic', fontWeight: 600 }}>
+                for Modern Living
               </span>
             </h1>
 
@@ -259,17 +259,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
             <p
               key={currentSlide.id + '-desc'}
               style={{
-                fontSize: 'clamp(0.95rem, 1.25vw, 1.15rem)',
+                fontSize: 'clamp(0.95rem, 1.2vw, 1.12rem)',
                 color: 'rgba(255, 255, 255, 0.9)',
                 fontWeight: 400,
-                marginBottom: '28px',
-                lineHeight: 1.55,
-                maxWidth: '540px',
+                marginBottom: '30px',
+                lineHeight: 1.6,
+                maxWidth: '560px',
                 textShadow: '0 1px 8px rgba(0,0,0,0.4)',
                 animation: 'fadeIn 0.5s ease-out',
               }}
             >
-              {currentSlide.subtitle}
+              Timeless design, exceptional comfort, beautifully crafted for the way you live. Featuring our {currentSlide.title}.
             </p>
 
             {/* CTA Action Buttons */}
@@ -280,22 +280,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '10px',
-                  backgroundColor: 'var(--color-plum-700)',
+                  backgroundColor: 'var(--color-plum-800)',
                   color: '#ffffff',
-                  padding: '14px 32px',
-                  borderRadius: '6px',
+                  padding: '14px 30px',
+                  borderRadius: '8px',
                   fontWeight: 700,
                   fontSize: '0.88rem',
                   letterSpacing: '0.8px',
                   textTransform: 'uppercase',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  boxShadow: '0 8px 24px rgba(37, 13, 51, 0.45)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  boxShadow: '0 8px 25px rgba(37, 13, 51, 0.5)',
                   transition: 'all 0.25s ease',
+                  cursor: 'pointer',
                 }}
-                className="hover:scale-105"
               >
-                <span>SHOP THIS ROOM</span>
-                <ArrowRight size={18} />
+                <span>SHOP COLLECTION</span>
+                <ArrowRight size={17} />
               </button>
 
               <button
@@ -310,20 +310,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  backgroundColor: viewMode === '3d' ? 'var(--color-plum-800)' : 'rgba(255, 255, 255, 0.12)',
+                  backgroundColor: viewMode === '3d' ? 'var(--color-plum-900)' : 'rgba(255, 255, 255, 0.12)',
                   backdropFilter: 'blur(12px)',
                   color: '#ffffff',
-                  padding: '14px 22px',
-                  borderRadius: '6px',
+                  padding: '14px 24px',
+                  borderRadius: '8px',
                   fontWeight: 600,
                   fontSize: '0.88rem',
                   border: '1px solid rgba(255, 255, 255, 0.25)',
                   transition: 'all 0.25s ease',
+                  cursor: 'pointer',
                 }}
-                className="hover:scale-105"
               >
-                <Box size={18} color="#d4af37" />
-                <span>{viewMode === '3d' ? 'FULLSCREEN 3D' : 'EXPLORE IN 3D'}</span>
+                <Box size={17} color="var(--color-gold)" />
+                <span>{viewMode === '3d' ? 'FULLSCREEN 3D STUDIO' : 'EXPLORE 3D STUDIO'}</span>
               </button>
 
               {viewMode === '3d' && (
