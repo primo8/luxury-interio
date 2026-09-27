@@ -2,6 +2,14 @@ import type { CustomerData, PaymentStatus, PaymentProvider } from '../types/paym
 import type { AdminOrder, AdminOrderItem, OrderWorkflowStatus, PaymentRecordStatus } from '../types/admin';
 import { generateOrderId } from '../utils/referenceId';
 import { db } from '../db/memoryDb';
+import { OrderModel } from '../models/Order';
+import { CustomerModel } from '../models/Customer';
+import { DiscountModel } from '../models/Discount';
+import { ProductModel } from '../models/Product';
+import { InventoryAdjustmentModel } from '../models/Inventory';
+import { NotificationModel } from '../models/Notification';
+import { AuditLogModel } from '../models/AuditLog';
+import { isDatabaseConnected } from '../config/database';
 
 export interface CalculateTotalsResult {
   subtotal: number;
@@ -208,6 +216,86 @@ export function createServerOrder(data: {
     link: `/admin/orders/${order.id}`,
   });
 
+  // Async write-through to MongoDB Atlas if connected
+  if (isDatabaseConnected()) {
+    OrderModel.findOneAndUpdate(
+      { orderNumber: order.orderNumber },
+      {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: order.customer.fullName,
+        customerEmail: order.customer.email,
+        customerPhone: order.customer.phone,
+        deliveryAddress: {
+          province: order.customer.province,
+          district: order.customer.district,
+          sector: order.customer.sector,
+          streetAddress: order.customer.address,
+          notes: order.customer.notes,
+        },
+        items: order.items.map((i) => ({
+          productId: i.productId,
+          productName: i.name,
+          sku: i.sku,
+          quantity: i.quantity,
+          unitPrice: i.price,
+          subtotal: i.subtotal,
+          image: i.image,
+        })),
+        subtotal: order.subtotal,
+        deliveryFee: order.shippingFee,
+        discountAmount: order.discountAmount,
+        appliedDiscountCode: order.couponCode,
+        total: order.total,
+        currency: order.currency,
+        orderStatus: order.orderStatus,
+        paymentStatus: order.paymentStatus,
+        timeline: order.timeline.map((t) => ({
+          status: t.status || order.orderStatus,
+          timestamp: new Date(t.timestamp),
+          actor: t.actor,
+          note: t.notes || t.event,
+        })),
+      },
+      { upsert: true, new: true }
+    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Order save failed:', err.message));
+
+    CustomerModel.findOneAndUpdate(
+      { phone: order.customer.phone },
+      {
+        $set: {
+          fullName: order.customer.fullName,
+          email: order.customer.email,
+          phone: order.customer.phone,
+          address: order.customer.address,
+          province: order.customer.province,
+          district: order.customer.district,
+          lastOrderDate: new Date(),
+        },
+        $inc: { totalOrders: 1, totalSpent: order.total },
+        $setOnInsert: { id: `cust-${Date.now()}`, status: 'ACTIVE', tags: ['Storefront Customer'] },
+      },
+      { upsert: true }
+    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Customer sync failed:', err.message));
+
+    if (order.couponCode) {
+      DiscountModel.findOneAndUpdate(
+        { code: order.couponCode },
+        { $inc: { usageCount: 1 } }
+      ).catch((err) => console.error('⚠️ [OrderService] MongoDB Discount usage increment failed:', err.message));
+    }
+
+    NotificationModel.create({
+      id: `notif-${Date.now()}`,
+      type: 'ORDER',
+      title: `New Order Received: #${order.orderNumber}`,
+      message: `${order.customer.fullName} placed an order for $${order.total.toLocaleString()}.`,
+      isRead: false,
+      linkTab: 'orders',
+      linkId: order.id,
+    }).catch((err) => console.error('⚠️ [OrderService] MongoDB Notification create failed:', err.message));
+  }
+
   return order;
 }
 
@@ -229,7 +317,6 @@ export function updateOrderStatus(
   const order = db.orders.get(orderId);
   if (!order) return undefined;
 
-  const previousPaymentStatus = order.paymentStatus;
   order.paymentStatus = paymentStatus as PaymentRecordStatus;
 
   if (paymentReferenceId) {
@@ -271,6 +358,26 @@ export function updateOrderStatus(
           timestamp: new Date().toISOString(),
         });
 
+        if (isDatabaseConnected()) {
+          ProductModel.findOneAndUpdate(
+            { id: product.id },
+            { stock: newStock, inStock: newStock > 0 }
+          ).catch((err) => console.error('⚠️ [OrderService] MongoDB stock update failed:', err.message));
+
+          InventoryAdjustmentModel.create({
+            id: `inv-${Date.now()}`,
+            productId: product.id,
+            sku: product.sku,
+            quantityChange: -item.quantity,
+            type: 'SALE',
+            reason: `Auto stock deduction for paid order #${order.orderNumber}`,
+            adminId: 'SYSTEM_MTN',
+            adminName: 'MTN MoMo Reconciliation',
+            previousStock: prevStock,
+            newStock,
+          }).catch((err) => console.error('⚠️ [OrderService] MongoDB InventoryAdjustment failed:', err.message));
+        }
+
         if (newStock <= db.settings.inventoryLowStockThreshold) {
           db.addNotification({
             title: `Low Stock Alert: ${product.name}`,
@@ -310,6 +417,26 @@ export function updateOrderStatus(
 
   order.updatedAt = new Date().toISOString();
   db.orders.set(orderId, order);
+
+  if (isDatabaseConnected()) {
+    OrderModel.findOneAndUpdate(
+      { orderNumber: order.orderNumber },
+      {
+        orderStatus: order.orderStatus,
+        paymentStatus: order.paymentStatus,
+        paymentId: order.paymentReferenceId,
+        $push: {
+          timeline: {
+            status: order.orderStatus,
+            timestamp: new Date(),
+            actor: 'MTN Gateway',
+            note: `Payment status updated to ${paymentStatus}`,
+          },
+        },
+      }
+    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Order status update failed:', err.message));
+  }
+
   return order;
 }
 
@@ -377,6 +504,37 @@ export function transitionOrderStatus(
     beforeState: { orderStatus: oldStatus },
     afterState: { orderStatus: newStatus },
   });
+
+  if (isDatabaseConnected()) {
+    OrderModel.findOneAndUpdate(
+      { orderNumber: order.orderNumber },
+      {
+        orderStatus: newStatus,
+        notes: notes ? [notes] : undefined,
+        $push: {
+          timeline: {
+            status: newStatus,
+            timestamp: new Date(),
+            actor: `${actor.name} (${actor.role})`,
+            note: notes || `Transitioned from ${oldStatus} to ${newStatus}`,
+          },
+        },
+      }
+    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Order transition failed:', err.message));
+
+    AuditLogModel.create({
+      id: `audit-${Date.now()}`,
+      actorId: actor.id,
+      actorName: actor.name,
+      actorRole: actor.role,
+      action: 'ORDER_STATUS_UPDATE',
+      resource: 'ORDERS',
+      resourceId: order.id,
+      details: `Transitioned order #${order.orderNumber} from ${oldStatus} to ${newStatus}`,
+      beforeState: { orderStatus: oldStatus },
+      afterState: { orderStatus: newStatus },
+    }).catch((err) => console.error('⚠️ [OrderService] MongoDB AuditLog create failed:', err.message));
+  }
 
   return { success: true, order };
 }

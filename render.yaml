@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: furnitura-api
+    runtime: node
+    plan: starter
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: MTN_ENV
+        value: sandbox
+      - key: MTN_BASE_URL
+        value: https://sandbox.momodeveloper.mtn.com
+      - key: MTN_COLLECTION_SUBSCRIPTION_KEY
+        sync: false
+      - key: MTN_API_USER
+        sync: false
+      - key: MTN_API_KEY
+        sync: false
+      - key: MTN_TARGET_ENVIRONMENT
+        value: sandbox
+      - key: MTN_CURRENCY
+        value: EUR
+      - key: MTN_CALLBACK_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

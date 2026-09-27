@@ -43,16 +43,19 @@ export interface PaymentStatusCheckResponse {
   referenceId: string;
   orderId: string;
   status: PaymentStatus;
-  amount: number;
-  currency: string;
-  phoneNumberMasked: string;
-  isSimulated: boolean;
+  amount?: number;
+  currency?: string;
+  phoneNumberMasked?: string;
+  isSimulated?: boolean;
+  payment?: any;
   financialTransactionId?: string;
   failureReason?: string;
   updatedAt: string;
   orderStatus: string;
   message?: string;
 }
+
+const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 /**
  * Initiates order creation and MTN MoMo RequestToPay on backend
@@ -61,7 +64,7 @@ export async function submitCheckoutAndPay(
   payload: CheckoutAndPayPayload
 ): Promise<CheckoutAndPayResponse> {
   try {
-    const res = await fetch('/api/payments/mtn/checkout-and-pay', {
+    const res = await fetch(`${API_ORIGIN}/api/payments/mtn/checkout-and-pay`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -73,7 +76,7 @@ export async function submitCheckoutAndPay(
     console.error('Payment API Request Error:', err);
     return {
       success: false,
-      message: 'Unable to communicate with the payment server. Please ensure the local server is running.',
+      message: 'Unable to communicate with the payment server. Please ensure the backend is reachable.',
       error: err.message,
     };
   }
@@ -86,7 +89,7 @@ export async function fetchPaymentStatus(
   referenceId: string
 ): Promise<PaymentStatusCheckResponse | null> {
   try {
-    const res = await fetch(`/api/payments/mtn/${referenceId}/status`);
+    const res = await fetch(`${API_ORIGIN}/api/payments/mtn/${referenceId}/status`);
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
@@ -100,7 +103,7 @@ export async function fetchPaymentStatus(
  */
 export async function fetchPaymentDiagnostics(): Promise<PaymentDiagnostic | null> {
   try {
-    const res = await fetch('/api/payments/mtn/config-status');
+    const res = await fetch(`${API_ORIGIN}/api/payments/mtn/config-status`);
     if (!res.ok) return null;
     const data = await res.json();
     return data.diagnostic;
@@ -115,7 +118,7 @@ export async function fetchPaymentDiagnostics(): Promise<PaymentDiagnostic | nul
  */
 export async function triggerTestPayment(phoneNumber: string, amount = 100) {
   try {
-    const res = await fetch('/api/payments/mtn/test-request', {
+    const res = await fetch(`${API_ORIGIN}/api/payments/mtn/test-request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phoneNumber, amount }),
@@ -131,7 +134,7 @@ export async function triggerTestPayment(phoneNumber: string, amount = 100) {
  */
 export async function fetchAllTransactions(): Promise<PaymentTransactionRecord[]> {
   try {
-    const res = await fetch('/api/payments/mtn/transactions');
+    const res = await fetch(`${API_ORIGIN}/api/payments/mtn/transactions`);
     if (!res.ok) return [];
     const data = await res.json();
     return data.transactions || [];
@@ -146,7 +149,7 @@ export async function fetchAllTransactions(): Promise<PaymentTransactionRecord[]
  */
 export async function clearAllTransactions() {
   try {
-    const res = await fetch('/api/payments/mtn/transactions/clear', { method: 'POST' });
+    const res = await fetch(`${API_ORIGIN}/api/payments/mtn/transactions/clear`, { method: 'POST' });
     return await res.json();
   } catch (err: any) {
     return { success: false, message: err.message };
@@ -158,7 +161,7 @@ export async function clearAllTransactions() {
  */
 export async function simulatePaymentStatus(referenceId: string, status: PaymentStatus) {
   try {
-    const res = await fetch('/api/payments/mtn/simulate-status', {
+    const res = await fetch(`${API_ORIGIN}/api/payments/mtn/simulate-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ referenceId, status }),

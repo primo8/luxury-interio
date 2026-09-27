@@ -1,0 +1,36 @@
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface INotificationDocument extends Document {
+  id: string;
+  type: 'ORDER' | 'PAYMENT' | 'STOCK' | 'CUSTOMER' | 'REVIEW' | 'SYSTEM';
+  title: string;
+  message: string;
+  isRead: boolean;
+  linkTab?: string;
+  linkId?: string;
+  createdAt: Date;
+}
+
+const NotificationSchema = new Schema<INotificationDocument>(
+  {
+    id: { type: String, required: true, unique: true, index: true },
+    type: {
+      type: String,
+      enum: ['ORDER', 'PAYMENT', 'STOCK', 'CUSTOMER', 'REVIEW', 'SYSTEM'],
+      required: true,
+    },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    isRead: { type: Boolean, default: false, index: true },
+    linkTab: String,
+    linkId: String,
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: false },
+  }
+);
+
+NotificationSchema.index({ createdAt: -1 });
+
+export const NotificationModel =
+  mongoose.models.Notification || mongoose.model<INotificationDocument>('Notification', NotificationSchema);

@@ -7,7 +7,8 @@ export interface AdminApiResponse {
   [key: string]: any;
 }
 
-const API_BASE = '/api/admin';
+const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE = `${API_ORIGIN}/api/admin`;
 
 // Helper fetch wrapper
 async function apiFetch(
@@ -15,10 +16,13 @@ async function apiFetch(
   options: RequestInit = {}
 ): Promise<AdminApiResponse> {
   try {
+    const token = localStorage.getItem('furnitura_admin_token') || sessionStorage.getItem('furnitura_admin_token');
+
     const res = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers || {}),
       },
     });
@@ -121,16 +125,20 @@ export async function fetchAdminInventory() {
   return apiFetch('/inventory');
 }
 
-export async function adjustAdminInventory(payload: {
+export async function adjustAdminInventory(adjustmentData: {
   productId: string;
   quantityChange: number;
-  adjustmentType: string;
-  reason?: string;
-  note?: string;
+  type?: string;
+  adjustmentType?: string;
+  reason: string;
 }) {
   return apiFetch('/inventory/adjust', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...adjustmentData,
+      type: adjustmentData.type || adjustmentData.adjustmentType || 'MANUAL_ADJUSTMENT',
+      adjustmentType: adjustmentData.adjustmentType || adjustmentData.type || 'MANUAL_ADJUSTMENT',
+    }),
   });
 }
 
@@ -163,7 +171,7 @@ export async function fetchAdminCustomerDetail(id: string) {
   return apiFetch(`/customers/${id}`);
 }
 
-// 8. Categories, Reviews, Delivery & CMS
+// 8. Categories, Reviews & Delivery
 export async function fetchAdminCategories() {
   return apiFetch('/categories');
 }
@@ -183,6 +191,7 @@ export async function fetchAdminDeliveryZones() {
   return apiFetch('/delivery');
 }
 
+// 9. CMS, 3D Studio & Analytics
 export async function fetchAdminCMS() {
   return apiFetch('/cms');
 }
@@ -194,7 +203,6 @@ export async function updateAdminCMS(cmsData: any) {
   });
 }
 
-// 9. 3D Studio & Analytics
 export async function fetchAdmin3DStudio() {
   return apiFetch('/3d-studio');
 }

@@ -1,9 +1,41 @@
 import type { PaymentRecord, PaymentStatus } from '../../types/payment';
 import { db } from '../../db/memoryDb';
+import { PaymentModel } from '../../models/Payment';
+import { isDatabaseConnected } from '../../config/database';
 
 export const paymentStore = {
   save(payment: PaymentRecord): PaymentRecord {
     db.payments.set(payment.mtnReferenceId, { ...payment });
+
+    if (isDatabaseConnected()) {
+      PaymentModel.findOneAndUpdate(
+        { mtnReferenceId: payment.mtnReferenceId },
+        {
+          id: payment.id || payment.paymentId,
+          paymentId: payment.paymentId,
+          orderId: payment.orderId,
+          mtnReferenceId: payment.mtnReferenceId,
+          externalId: payment.externalId,
+          amount: payment.amount,
+          currency: payment.currency || 'RWF',
+          phoneNumberMasked: payment.phoneNumberMasked,
+          provider: payment.provider || 'MTN_MOMO',
+          environment: payment.environment || 'SANDBOX',
+          status: payment.status,
+          failureReason: payment.failureReason,
+          $push: {
+            events: {
+              status: payment.status,
+              timestamp: new Date(),
+              details: 'Payment recorded',
+              source: 'GATEWAY_CALLBACK',
+            },
+          },
+        },
+        { upsert: true, new: true }
+      ).catch((err) => console.error('⚠️ [PaymentStore] MongoDB save failed:', err.message));
+    }
+
     return payment;
   },
 
@@ -26,8 +58,8 @@ export const paymentStore = {
   },
 
   updateStatus(
-    referenceId: string, 
-    status: PaymentStatus, 
+    referenceId: string,
+    status: PaymentStatus,
     options?: { failureReason?: string; financialTransactionId?: string }
   ): PaymentRecord | undefined {
     const record = db.payments.get(referenceId);
@@ -39,6 +71,26 @@ export const paymentStore = {
     if (options?.financialTransactionId) record.financialTransactionId = options.financialTransactionId;
 
     db.payments.set(referenceId, record);
+
+    if (isDatabaseConnected()) {
+      PaymentModel.findOneAndUpdate(
+        { mtnReferenceId: referenceId },
+        {
+          status,
+          failureReason: options?.failureReason,
+          lastCheckedAt: new Date(),
+          $push: {
+            events: {
+              status,
+              timestamp: new Date(),
+              details: options?.failureReason ? `Status changed: ${options.failureReason}` : `Status transitioned to ${status}`,
+              source: 'STATUS_POLL',
+            },
+          },
+        }
+      ).catch((err) => console.error('⚠️ [PaymentStore] MongoDB update failed:', err.message));
+    }
+
     return record;
   },
 
