@@ -79,6 +79,9 @@ export interface StaffUser {
   avatar?: string;
   permissions: AdminPermission[];
   active: boolean;
+  isActive?: boolean;
+  department?: string;
+  firebaseUid?: string;
   phone?: string;
   lastLoginAt?: string;
   createdAt: string;
@@ -107,6 +110,7 @@ export interface AdminNotification {
   severity: 'info' | 'success' | 'warning' | 'error';
   link?: string;
   isRead: boolean;
+  read?: boolean;
   isArchived: boolean;
   createdAt: string;
 }
@@ -114,6 +118,7 @@ export interface AdminNotification {
 export interface DiscountRule {
   id: string;
   name: string;
+  description?: string;
   code: string;
   type: 'percentage' | 'fixed';
   value: number;
@@ -176,7 +181,9 @@ export interface DeliveryZone {
   estimatedDays: string;
   freeShippingThreshold: number;
   active: boolean;
+  isActive?: boolean;
   whiteGloveAvailable: boolean;
+  whiteGloveIncluded?: boolean;
   whiteGloveFee: number;
   description: string;
 }
@@ -313,3 +320,52 @@ export interface StoreSettings {
   allowGuestCheckout: boolean;
   requirePhoneVerification: boolean;
 }
+
+export interface ColorOption {
+  name: string;
+  hex: string;
+  threeColor: number;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  subtitle?: string;
+  price: number;
+  originalPrice?: number;
+  discountPercent?: number;
+  rating: number;
+  reviewCount?: number;
+  reviewsCount?: number;
+  image: string;
+  images?: string[];
+  galleryImages?: string[];
+  category: string;
+  room: string;
+  isPopular?: boolean;
+  isNewArrival?: boolean;
+  isNew?: boolean;
+  isBestSeller?: boolean;
+  isDealOfTheWeek?: boolean;
+  isFeatured?: boolean;
+  badge?: string;
+  description: string;
+  longDescription?: string;
+  dimensions?: {
+    width: string;
+    depth: string;
+    height: string;
+    unit: string;
+  };
+  materials?: string[];
+  colors: ColorOption[];
+  model3dUrl?: string;
+  threeModelType?: string;
+  inStock: boolean;
+  stockCount: number;
+  sku: string;
+  slug?: string;
+  brand?: string;
+}
+
+

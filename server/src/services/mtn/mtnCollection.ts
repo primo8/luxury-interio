@@ -115,28 +115,31 @@ export async function initiateRequestToPay(params: RequestToPayParams): Promise<
   paymentStore.save(paymentRecord);
   updateOrderStatus(order.id, 'PENDING', referenceId);
 
-  // 6. Handle Simulated Sandbox mode if credentials not provided
+  // 6. Handle unconfigured MTN credentials state
   if (!isMtnConfigured()) {
-    console.log(`[MTN Sandbox Simulator] RequestToPay initiated for Order ${orderId} (${maskedPhone}), Ref: ${referenceId}`);
-    
-    // In simulated sandbox mode, schedule an automatic simulated approval after 4 seconds (unless it's a test failed scenario)
-    // Note: If the phone number ends in "0000", simulate failure; if "9999", simulate timeout/rejection
-    setTimeout(() => {
-      const current = paymentStore.getByReferenceId(referenceId);
-      if (current && current.status === 'PENDING') {
-        if (phoneNumber.endsWith('0000')) {
-          paymentStore.updateStatus(referenceId, 'FAILED', { failureReason: 'Insufficient funds or account inactive' });
-          updateOrderStatus(orderId, 'FAILED');
-        } else if (phoneNumber.endsWith('9999')) {
-          paymentStore.updateStatus(referenceId, 'REJECTED', { failureReason: 'Customer declined prompt' });
-          updateOrderStatus(orderId, 'REJECTED');
-        } else {
-          paymentStore.updateStatus(referenceId, 'SUCCESSFUL', { financialTransactionId: `MTN-TX-${Math.floor(10000000 + Math.random() * 90000000)}` });
-          updateOrderStatus(orderId, 'SUCCESSFUL');
-        }
-      }
-    }, 4500);
+    console.log(`ℹ️ [MTN MoMo] Credentials not provided (MTN status: NOT CONFIGURED). Order ${orderId}, Ref: ${referenceId}`);
 
+    if (process.env.NODE_ENV === 'production') {
+      paymentStore.updateStatus(referenceId, 'FAILED', {
+        failureReason: 'MTN MoMo API credentials are NOT CONFIGURED on this server.',
+      });
+      updateOrderStatus(orderId, 'FAILED');
+
+      return {
+        success: false,
+        referenceId,
+        orderId,
+        status: 'FAILED',
+        amount: amountToCharge,
+        currency: paymentCurrency,
+        phoneNumberMasked: maskedPhone,
+        isSimulated: false,
+        message: 'MTN MoMo Gateway credentials are not configured on this server (MTN status: NOT CONFIGURED).',
+        error: 'MTN_NOT_CONFIGURED',
+      };
+    }
+
+    // In local development / sandbox test mode without credentials
     return {
       success: true,
       referenceId,
@@ -146,7 +149,7 @@ export async function initiateRequestToPay(params: RequestToPayParams): Promise<
       currency: paymentCurrency,
       phoneNumberMasked: maskedPhone,
       isSimulated: true,
-      message: 'Payment request sent! Please approve the prompt on your phone (078XXXXXXX).',
+      message: 'Payment request initiated in sandbox development mode. MTN status: NOT CONFIGURED.',
     };
   }
 

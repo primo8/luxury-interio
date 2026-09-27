@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite",
     "server": "tsx server/src/server.ts",
-    "start": "tsx server/src/server.ts",
+    "server:dev": "tsx server/src/server.ts",
+    "build:server": "esbuild server/src/server.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-server/server.js",
+    "build:frontend": "tsc -b && vite build",
+    "build": "npm run build:frontend && npm run build:server",
+    "start": "node dist-server/server.js",
     "db:seed": "tsx server/src/scripts/seed.ts",
     "db:migrate": "tsx server/src/scripts/migrate.ts",
-    "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },

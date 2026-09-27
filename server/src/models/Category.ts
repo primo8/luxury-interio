@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface ICategoryDocument extends Document {
+export interface ICategoryDocument {
   id: string;
   name: string;
   slug: string;

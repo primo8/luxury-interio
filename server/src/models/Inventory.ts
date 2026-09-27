@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface IInventoryAdjustmentDocument extends Document {
+export interface IInventoryAdjustmentDocument {
   id: string;
   productId: string;
   sku: string;

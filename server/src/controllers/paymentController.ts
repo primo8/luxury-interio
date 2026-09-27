@@ -157,7 +157,8 @@ export async function getMtnPaymentStatus(req: Request, res: Response) {
       });
     }
 
-    const result = await checkPaymentStatus(referenceId);
+    const refId = String(referenceId || '');
+    const result = await checkPaymentStatus(refId);
 
     if (!result) {
       return res.status(404).json({

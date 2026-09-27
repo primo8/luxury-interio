@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface ISettingsDocument extends Document {
+export interface ISettingsDocument {
   key: string;
   storeName: string;
   contactEmail: string;

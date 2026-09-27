@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface INotificationDocument extends Document {
+export interface INotificationDocument {
   id: string;
   type: 'ORDER' | 'PAYMENT' | 'STOCK' | 'CUSTOMER' | 'REVIEW' | 'SYSTEM';
   title: string;

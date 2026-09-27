@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export type StaffRole =
   | 'SUPER_ADMIN'
@@ -9,7 +9,7 @@ export type StaffRole =
   | 'CONTENT_MANAGER'
   | 'SUPPORT_AGENT';
 
-export interface IStaffDocument extends Document {
+export interface IStaffDocument {
   id: string;
   firebaseUid?: string;
   name: string;

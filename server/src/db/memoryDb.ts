@@ -1,4 +1,4 @@
-import type { Product } from '../../src/types';
+import type { Product } from '../types/admin';
 import type {
   StaffUser,
   AuditLog,

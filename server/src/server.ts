@@ -3,6 +3,7 @@ import cors from 'cors';
 import { config, getSafeConfigDiagnostic } from './config/env';
 import { connectDatabase, disconnectDatabase, getDatabaseStatus, isDatabaseConnected } from './config/database';
 import { initFirebaseAdmin } from './config/firebase';
+import { syncDatabaseWithMongo } from './db/sync';
 import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import storeRoutes from './routes/storeRoutes';
@@ -10,38 +11,46 @@ import storeRoutes from './routes/storeRoutes';
 const app = express();
 
 // Initialize Cloud Connections on startup
-connectDatabase().catch((err) => console.error('Initial DB connection error:', err));
+connectDatabase()
+  .then(async (connected) => {
+    if (connected) {
+      await syncDatabaseWithMongo();
+    }
+  })
+  .catch((err) => console.error('Initial DB connection error:', err));
+
 initFirebaseAdmin();
 
-// Explicit CORS Configuration for Cloudflare Pages Storefront & Admin
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-  : [
-      'http://localhost:5173',
-      'http://localhost:5180',
-      'http://localhost:3000',
-      'https://furnitura.pages.dev',
-      'https://admin-furnitura.pages.dev',
-    ];
+// Configurable CORS for Cloudflare Pages Storefront & Admin
+const rawCorsOrigins = process.env.CORS_ORIGINS || '';
+const configuredOrigins = rawCorsOrigins
+  ? rawCorsOrigins.split(',').map((o) => o.trim()).filter(Boolean)
+  : [];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
 
-      // In development or if allowed in CORS_ORIGINS
-      if (process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+      // In local development, allow localhost origins
+      if (process.env.NODE_ENV !== 'production') {
+        if (
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:') ||
+          configuredOrigins.includes(origin)
+        ) {
+          return callback(null, true);
+        }
+      }
+
+      // In production, strictly enforce configured origins
+      if (configuredOrigins.length > 0 && configuredOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      // Allow all preview deploys on *.pages.dev
-      if (origin.endsWith('.pages.dev')) {
-        return callback(null, true);
-      }
-
-      console.warn(`[CORS] Request blocked from origin: ${origin}`);
-      return callback(new Error('Not allowed by CORS policy.'));
+      console.warn(`[CORS] Request blocked from unauthorized origin: ${origin}`);
+      return callback(new Error(`Origin '${origin}' is not allowed by CORS policy.`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -70,30 +79,39 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
+  const dbConnected = isDatabaseConnected();
+  const isProd = process.env.NODE_ENV === 'production';
+
+  res.status(isProd && !dbConnected ? 503 : 200).json({
+    status: dbConnected || !isProd ? 'ok' : 'degraded',
     environment: process.env.NODE_ENV || 'production',
     service: 'FURNITURA Commerce Engine',
-    database: isDatabaseConnected() ? 'connected' : 'in-memory-fallback',
+    database: dbConnected ? 'connected' : (isProd ? 'disconnected' : 'in-memory-fallback'),
     timestamp: new Date().toISOString(),
   });
 });
 
 app.get('/health/database', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
-    database: getDatabaseStatus(),
+  const status = getDatabaseStatus();
+  const isProd = process.env.NODE_ENV === 'production';
+
+  res.status(isProd && !status.connected ? 503 : 200).json({
+    status: status.connected ? 'ok' : (isProd ? 'error' : 'development-fallback'),
+    database: status,
     timestamp: new Date().toISOString(),
   });
 });
 
 // 2. API Health Diagnostic
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
+  const dbConnected = isDatabaseConnected();
+  const isProd = process.env.NODE_ENV === 'production';
+
+  res.status(isProd && !dbConnected ? 503 : 200).json({
+    status: dbConnected || !isProd ? 'ok' : 'degraded',
     service: 'FURNITURA Luxury Commerce & Admin Server',
     environment: process.env.NODE_ENV || 'production',
-    database: isDatabaseConnected() ? 'connected' : 'in-memory-fallback',
+    database: dbConnected ? 'connected' : (isProd ? 'disconnected' : 'in-memory-fallback'),
     timestamp: new Date().toISOString(),
     sandbox: getSafeConfigDiagnostic(),
   });

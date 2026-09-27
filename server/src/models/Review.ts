@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface IReviewDocument extends Document {
+export interface IReviewDocument {
   id: string;
   productId: string;
   productName: string;

@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface IDeliveryZoneDocument extends Document {
+export interface IDeliveryZoneDocument {
   id: string;
   name: string;
   region: string;

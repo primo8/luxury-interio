@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface ICustomerDocument extends Document {
+export interface ICustomerDocument {
   id: string;
   fullName: string;
   email: string;

@@ -3,12 +3,23 @@ import { db } from '../db/memoryDb';
 import { transitionOrderStatus } from '../services/orderService';
 import { checkPaymentStatus } from '../services/mtn/mtnPaymentStatus';
 import { isMtnConfigured, getSafeConfigDiagnostic } from '../config/env';
+import { ProductModel } from '../models/Product';
+import { DiscountModel } from '../models/Discount';
+import { CategoryModel } from '../models/Category';
+import { DeliveryZoneModel } from '../models/DeliveryZone';
+import { StaffModel } from '../models/Staff';
+import { ReviewModel } from '../models/Review';
+import { CMSModel } from '../models/CMS';
+import { SettingsModel } from '../models/Settings';
+import { InventoryAdjustmentModel } from '../models/Inventory';
+import { isDatabaseConnected } from '../config/database';
 import type {
   StaffRole,
   AdminPermission,
   OrderWorkflowStatus,
   ProductPublishStatus,
   InventoryAdjustmentReason,
+  Product,
 } from '../types/admin';
 import type { PaymentStatus } from '../types/payment';
 
@@ -367,7 +378,7 @@ export async function getAdminOrders(req: Request, res: Response) {
 
 export async function getAdminOrderDetail(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const order = db.orders.get(id);
 
     if (!order) {
@@ -397,7 +408,7 @@ export async function getAdminOrderDetail(req: Request, res: Response) {
 
 export async function updateAdminOrderStatus(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { newStatus, notes, actor } = req.body;
 
     if (!newStatus) {
@@ -425,7 +436,7 @@ export async function updateAdminOrderStatus(req: Request, res: Response) {
 
 export async function addAdminOrderNote(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { note, actor } = req.body;
 
     const order = db.orders.get(id);
@@ -452,7 +463,7 @@ export async function addAdminOrderNote(req: Request, res: Response) {
 
 export async function cancelAdminOrder(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { reason, actor } = req.body;
 
     const currentActor = actor || { name: 'Diane Uwase', role: 'SUPER_ADMIN', id: 'staff-1' };
@@ -519,7 +530,7 @@ export async function getAdminPayments(req: Request, res: Response) {
 
 export async function getAdminPaymentDetail(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const payment =
       db.payments.get(id) ||
       Array.from(db.payments.values()).find((p) => p.paymentId === id || p.orderId === id);
@@ -545,7 +556,7 @@ export async function getAdminPaymentDetail(req: Request, res: Response) {
  */
 export async function reconcileAdminPayment(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { actor } = req.body;
 
     const payment =
@@ -645,7 +656,7 @@ export async function getAdminProducts(req: Request, res: Response) {
 
 export async function getAdminProductDetail(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const product = db.products.get(id);
 
     if (!product) {
@@ -681,6 +692,7 @@ export async function createAdminProduct(req: Request, res: Response) {
       originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : undefined,
       discountPercent: data.discountPercent ? parseInt(data.discountPercent, 10) : undefined,
       rating: 5,
+      reviewCount: 0,
       reviewsCount: 0,
       image: data.image || '/hero-chair.jpg',
       galleryImages: data.galleryImages || [data.image || '/hero-chair.jpg'],
@@ -701,6 +713,10 @@ export async function createAdminProduct(req: Request, res: Response) {
 
     db.products.set(newId, product);
 
+    if (isDatabaseConnected()) {
+      (ProductModel as any).findOneAndUpdate({ id: product.id }, product, { upsert: true }).catch((e: any) => console.error('⚠️ [Admin] MongoDB Product save failed:', e.message));
+    }
+
     db.logAudit({
       actorId: actor?.id || 'staff-4',
       actorName: actor?.name || 'Eric Ndayisaba',
@@ -720,7 +736,7 @@ export async function createAdminProduct(req: Request, res: Response) {
 
 export async function updateAdminProduct(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const data = req.body;
     const { actor } = data;
 
@@ -739,6 +755,10 @@ export async function updateAdminProduct(req: Request, res: Response) {
     };
 
     db.products.set(id, updated);
+
+    if (isDatabaseConnected()) {
+      (ProductModel as any).findOneAndUpdate({ id }, updated, { upsert: true }).catch((e: any) => console.error('⚠️ [Admin] MongoDB Product update failed:', e.message));
+    }
 
     db.logAudit({
       actorId: actor?.id || 'staff-4',
@@ -760,7 +780,7 @@ export async function updateAdminProduct(req: Request, res: Response) {
 
 export async function deleteAdminProduct(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { actor } = req.body;
 
     const existing = db.products.get(id);
@@ -769,6 +789,10 @@ export async function deleteAdminProduct(req: Request, res: Response) {
     }
 
     db.products.delete(id);
+
+    if (isDatabaseConnected()) {
+      (ProductModel as any).findOneAndUpdate({ id }, { status: 'ARCHIVED' }).catch((e: any) => console.error('⚠️ [Admin] MongoDB Product archive failed:', e.message));
+    }
 
     db.logAudit({
       actorId: actor?.id || 'staff-1',
@@ -849,6 +873,21 @@ export async function adjustAdminInventory(req: Request, res: Response) {
     product.stockCount = newStock;
     product.inStock = newStock > 0;
     db.products.set(productId, product);
+
+    if (isDatabaseConnected()) {
+      (ProductModel as any).findOneAndUpdate({ id: productId }, { stock: newStock, stockCount: newStock, inStock: newStock > 0 }).catch((e: any) => console.error('⚠️ [Admin] MongoDB inventory update failed:', e.message));
+      (InventoryAdjustmentModel as any).create({
+        id: `inv-${Date.now()}`,
+        productId,
+        sku: product.sku,
+        previousStock: prevStock,
+        adjustmentQuantity: delta,
+        newStock,
+        reason: adjustmentType,
+        note: reason || note || 'Manual adjustment',
+        actorId: actor?.name || 'Staff User',
+      }).catch((e: any) => console.error('⚠️ [Admin] MongoDB inventory log failed:', e.message));
+    }
 
     const actorName = actor?.name || 'Diane Uwase';
     const actorRole = actor?.role || 'SUPER_ADMIN';
@@ -960,6 +999,27 @@ export async function createAdminDiscount(req: Request, res: Response) {
 
     db.discounts.set(newDiscount.id, newDiscount);
 
+    if (isDatabaseConnected()) {
+      (DiscountModel as any).findOneAndUpdate(
+        { id: newDiscount.id },
+        {
+          id: newDiscount.id,
+          code: newDiscount.code,
+          name: newDiscount.name,
+          discountType: newDiscount.type === 'percentage' ? 'PERCENTAGE' : 'FIXED_AMOUNT',
+          value: newDiscount.value,
+          startDate: new Date(newDiscount.startDate),
+          endDate: new Date(newDiscount.endDate),
+          minOrderValue: newDiscount.minOrderValue,
+          maxDiscount: newDiscount.maxDiscount,
+          usageLimit: newDiscount.usageLimit,
+          usageCount: newDiscount.usageCount,
+          status: newDiscount.status,
+        },
+        { upsert: true }
+      ).catch((e: any) => console.error('⚠️ [Admin] MongoDB Discount save failed:', e.message));
+    }
+
     db.logAudit({
       actorId: actor?.id || 'staff-1',
       actorName: actor?.name || 'Diane Uwase',
@@ -979,7 +1039,7 @@ export async function createAdminDiscount(req: Request, res: Response) {
 
 export async function updateAdminDiscountStatus(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { status, actor } = req.body;
 
     const discount = db.discounts.get(id);
@@ -991,6 +1051,10 @@ export async function updateAdminDiscountStatus(req: Request, res: Response) {
     discount.status = status;
     discount.updatedAt = new Date().toISOString();
     db.discounts.set(id, discount);
+
+    if (isDatabaseConnected()) {
+      (DiscountModel as any).findOneAndUpdate({ id }, { status, updatedAt: new Date() }).catch((e: any) => console.error('⚠️ [Admin] MongoDB Discount update failed:', e.message));
+    }
 
     db.logAudit({
       actorId: actor?.id || 'staff-1',
@@ -1058,7 +1122,7 @@ export async function getAdminCustomers(req: Request, res: Response) {
 
 export async function getAdminCustomerDetail(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const customer = db.customers.get(id);
 
     if (!customer) {
@@ -1112,7 +1176,7 @@ export async function getAdminReviews(req: Request, res: Response) {
 
 export async function updateAdminReviewStatus(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { status, reply, actor } = req.body;
 
     const review = db.reviews.get(id);
@@ -1170,6 +1234,24 @@ export async function updateAdminCMS(req: Request, res: Response) {
     const { actor } = data;
 
     db.cms = { ...db.cms, ...data };
+
+    if (isDatabaseConnected()) {
+      (CMSModel as any).findOneAndUpdate(
+        { configKey: 'HOMEPAGE_CONFIG' },
+        {
+          configKey: 'HOMEPAGE_CONFIG',
+          heroTitle: db.cms.heroTitle,
+          heroSubtitle: db.cms.heroSubtitle,
+          heroBadge: db.cms.heroBadge,
+          heroPrimaryCtaText: db.cms.heroPrimaryCtaText,
+          heroSecondaryCtaText: db.cms.heroSecondaryCtaText,
+          announcementText: db.cms.announcementText,
+          announcementActive: db.cms.announcementActive,
+          promoBanners: db.cms.promoBanners,
+        },
+        { upsert: true }
+      ).catch((e: any) => console.error('⚠️ [Admin] MongoDB CMS update failed:', e.message));
+    }
 
     db.logAudit({
       actorId: actor?.id || 'staff-5',
@@ -1320,7 +1402,7 @@ export async function getAdminNotifications(req: Request, res: Response) {
 
 export async function markAdminNotificationRead(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const notif = db.notifications.find((n) => n.id === id);
     if (notif) notif.isRead = true;
     return res.status(200).json({ success: true, notification: notif });
@@ -1395,6 +1477,26 @@ export async function updateAdminSettings(req: Request, res: Response) {
     const { actor } = data;
 
     db.settings = { ...db.settings, ...data };
+
+    if (isDatabaseConnected()) {
+      (SettingsModel as any).findOneAndUpdate(
+        { configKey: 'STORE_SETTINGS' },
+        {
+          configKey: 'STORE_SETTINGS',
+          storeName: db.settings.storeName,
+          currency: db.settings.currency,
+          supportEmail: db.settings.supportEmail,
+          supportPhone: db.settings.supportPhone,
+          taxRatePercent: db.settings.taxRatePercent,
+          freeShippingThreshold: db.settings.freeShippingThreshold,
+          standardShippingFee: db.settings.standardShippingFee,
+          whiteGloveFee: db.settings.whiteGloveFee,
+          inventoryLowStockThreshold: db.settings.inventoryLowStockThreshold,
+          maintenanceMode: db.settings.maintenanceMode,
+        },
+        { upsert: true }
+      ).catch((e: any) => console.error('⚠️ [Admin] MongoDB Settings update failed:', e.message));
+    }
 
     db.logAudit({
       actorId: actor?.id || 'staff-1',
@@ -1514,7 +1616,7 @@ export async function globalAdminSearch(req: Request, res: Response) {
 
 export async function exportAdminResource(req: Request, res: Response) {
   try {
-    const { resource } = req.params;
+    const resource = String(req.params.resource || '');
 
     let csvContent = '';
     let filename = `furnitura-${resource}-${Date.now()}.csv`;

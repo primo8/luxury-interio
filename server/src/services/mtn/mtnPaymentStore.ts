@@ -8,10 +8,10 @@ export const paymentStore = {
     db.payments.set(payment.mtnReferenceId, { ...payment });
 
     if (isDatabaseConnected()) {
-      PaymentModel.findOneAndUpdate(
+      (PaymentModel as any).findOneAndUpdate(
         { mtnReferenceId: payment.mtnReferenceId },
         {
-          id: payment.id || payment.paymentId,
+          id: payment.paymentId,
           paymentId: payment.paymentId,
           orderId: payment.orderId,
           mtnReferenceId: payment.mtnReferenceId,
@@ -20,7 +20,7 @@ export const paymentStore = {
           currency: payment.currency || 'RWF',
           phoneNumberMasked: payment.phoneNumberMasked,
           provider: payment.provider || 'MTN_MOMO',
-          environment: payment.environment || 'SANDBOX',
+          environment: 'SANDBOX',
           status: payment.status,
           failureReason: payment.failureReason,
           $push: {
@@ -33,7 +33,7 @@ export const paymentStore = {
           },
         },
         { upsert: true, new: true }
-      ).catch((err) => console.error('⚠️ [PaymentStore] MongoDB save failed:', err.message));
+      ).catch((err: any) => console.error('⚠️ [PaymentStore] MongoDB save failed:', err.message));
     }
 
     return payment;
@@ -73,7 +73,7 @@ export const paymentStore = {
     db.payments.set(referenceId, record);
 
     if (isDatabaseConnected()) {
-      PaymentModel.findOneAndUpdate(
+      (PaymentModel as any).findOneAndUpdate(
         { mtnReferenceId: referenceId },
         {
           status,
@@ -88,7 +88,7 @@ export const paymentStore = {
             },
           },
         }
-      ).catch((err) => console.error('⚠️ [PaymentStore] MongoDB update failed:', err.message));
+      ).catch((err: any) => console.error('⚠️ [PaymentStore] MongoDB update failed:', err.message));
     }
 
     return record;
@@ -96,7 +96,7 @@ export const paymentStore = {
 
   getAll(): PaymentRecord[] {
     return Array.from(db.payments.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   },
 

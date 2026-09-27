@@ -57,7 +57,7 @@ export function calculateOrderTotals(
   if (couponCode) {
     const normalized = couponCode.trim().toUpperCase();
     const rule = Array.from(db.discounts.values()).find(
-      (d) => d.code === normalized && d.status === 'ACTIVE'
+      (d: any) => d.code === normalized && d.status === 'ACTIVE'
     );
 
     if (rule) {
@@ -165,7 +165,7 @@ export function createServerOrder(data: {
 
   // Update or create customer record in database
   const existingCust = Array.from(db.customers.values()).find(
-    (c) => c.phone === data.customer.phone || c.email === data.customer.email
+    (c: any) => c.phone === data.customer.phone || c.email === data.customer.email
   );
 
   if (existingCust) {
@@ -200,7 +200,7 @@ export function createServerOrder(data: {
   // Increment discount usage if coupon was used
   if (data.couponCode) {
     const normalized = data.couponCode.trim().toUpperCase();
-    const discount = Array.from(db.discounts.values()).find((d) => d.code === normalized);
+    const discount = Array.from(db.discounts.values()).find((d: any) => d.code === normalized);
     if (discount) {
       discount.usageCount += 1;
       db.discounts.set(discount.id, discount);
@@ -218,7 +218,7 @@ export function createServerOrder(data: {
 
   // Async write-through to MongoDB Atlas if connected
   if (isDatabaseConnected()) {
-    OrderModel.findOneAndUpdate(
+    (OrderModel as any).findOneAndUpdate(
       { orderNumber: order.orderNumber },
       {
         id: order.id,
@@ -233,7 +233,7 @@ export function createServerOrder(data: {
           streetAddress: order.customer.address,
           notes: order.customer.notes,
         },
-        items: order.items.map((i) => ({
+        items: order.items.map((i: any) => ({
           productId: i.productId,
           productName: i.name,
           sku: i.sku,
@@ -250,7 +250,7 @@ export function createServerOrder(data: {
         currency: order.currency,
         orderStatus: order.orderStatus,
         paymentStatus: order.paymentStatus,
-        timeline: order.timeline.map((t) => ({
+        timeline: order.timeline.map((t: any) => ({
           status: t.status || order.orderStatus,
           timestamp: new Date(t.timestamp),
           actor: t.actor,
@@ -258,9 +258,9 @@ export function createServerOrder(data: {
         })),
       },
       { upsert: true, new: true }
-    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Order save failed:', err.message));
+    ).catch((err: any) => console.error('⚠️ [OrderService] MongoDB Order save failed:', err.message));
 
-    CustomerModel.findOneAndUpdate(
+    (CustomerModel as any).findOneAndUpdate(
       { phone: order.customer.phone },
       {
         $set: {
@@ -276,16 +276,16 @@ export function createServerOrder(data: {
         $setOnInsert: { id: `cust-${Date.now()}`, status: 'ACTIVE', tags: ['Storefront Customer'] },
       },
       { upsert: true }
-    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Customer sync failed:', err.message));
+    ).catch((err: any) => console.error('⚠️ [OrderService] MongoDB Customer sync failed:', err.message));
 
     if (order.couponCode) {
-      DiscountModel.findOneAndUpdate(
+      (DiscountModel as any).findOneAndUpdate(
         { code: order.couponCode },
         { $inc: { usageCount: 1 } }
-      ).catch((err) => console.error('⚠️ [OrderService] MongoDB Discount usage increment failed:', err.message));
+      ).catch((err: any) => console.error('⚠️ [OrderService] MongoDB Discount usage increment failed:', err.message));
     }
 
-    NotificationModel.create({
+    (NotificationModel as any).create({
       id: `notif-${Date.now()}`,
       type: 'ORDER',
       title: `New Order Received: #${order.orderNumber}`,
@@ -293,7 +293,7 @@ export function createServerOrder(data: {
       isRead: false,
       linkTab: 'orders',
       linkId: order.id,
-    }).catch((err) => console.error('⚠️ [OrderService] MongoDB Notification create failed:', err.message));
+    }).catch((err: any) => console.error('⚠️ [OrderService] MongoDB Notification create failed:', err.message));
   }
 
   return order;
@@ -359,12 +359,12 @@ export function updateOrderStatus(
         });
 
         if (isDatabaseConnected()) {
-          ProductModel.findOneAndUpdate(
+          (ProductModel as any).findOneAndUpdate(
             { id: product.id },
             { stock: newStock, inStock: newStock > 0 }
-          ).catch((err) => console.error('⚠️ [OrderService] MongoDB stock update failed:', err.message));
+          ).catch((err: any) => console.error('⚠️ [OrderService] MongoDB stock update failed:', err.message));
 
-          InventoryAdjustmentModel.create({
+          (InventoryAdjustmentModel as any).create({
             id: `inv-${Date.now()}`,
             productId: product.id,
             sku: product.sku,
@@ -375,7 +375,7 @@ export function updateOrderStatus(
             adminName: 'MTN MoMo Reconciliation',
             previousStock: prevStock,
             newStock,
-          }).catch((err) => console.error('⚠️ [OrderService] MongoDB InventoryAdjustment failed:', err.message));
+          }).catch((err: any) => console.error('⚠️ [OrderService] MongoDB InventoryAdjustment failed:', err.message));
         }
 
         if (newStock <= db.settings.inventoryLowStockThreshold) {
@@ -419,7 +419,7 @@ export function updateOrderStatus(
   db.orders.set(orderId, order);
 
   if (isDatabaseConnected()) {
-    OrderModel.findOneAndUpdate(
+    (OrderModel as any).findOneAndUpdate(
       { orderNumber: order.orderNumber },
       {
         orderStatus: order.orderStatus,
@@ -434,7 +434,7 @@ export function updateOrderStatus(
           },
         },
       }
-    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Order status update failed:', err.message));
+    ).catch((err: any) => console.error('⚠️ [OrderService] MongoDB Order status update failed:', err.message));
   }
 
   return order;
@@ -506,7 +506,7 @@ export function transitionOrderStatus(
   });
 
   if (isDatabaseConnected()) {
-    OrderModel.findOneAndUpdate(
+    (OrderModel as any).findOneAndUpdate(
       { orderNumber: order.orderNumber },
       {
         orderStatus: newStatus,
@@ -520,9 +520,9 @@ export function transitionOrderStatus(
           },
         },
       }
-    ).catch((err) => console.error('⚠️ [OrderService] MongoDB Order transition failed:', err.message));
+    ).catch((err: any) => console.error('⚠️ [OrderService] MongoDB Order transition failed:', err.message));
 
-    AuditLogModel.create({
+    (AuditLogModel as any).create({
       id: `audit-${Date.now()}`,
       actorId: actor.id,
       actorName: actor.name,
@@ -533,7 +533,7 @@ export function transitionOrderStatus(
       details: `Transitioned order #${order.orderNumber} from ${oldStatus} to ${newStatus}`,
       beforeState: { orderStatus: oldStatus },
       afterState: { orderStatus: newStatus },
-    }).catch((err) => console.error('⚠️ [OrderService] MongoDB AuditLog create failed:', err.message));
+    }).catch((err: any) => console.error('⚠️ [OrderService] MongoDB AuditLog create failed:', err.message));
   }
 
   return { success: true, order };
@@ -544,6 +544,6 @@ export function transitionOrderStatus(
  */
 export function listOrders(): AdminOrder[] {
   return Array.from(db.orders.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }

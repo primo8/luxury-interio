@@ -136,10 +136,10 @@ export async function authenticateToken(
       staffRecord = await StaffModel.findOne({
         $or: [{ firebaseUid: decodedToken.uid }, { email: decodedToken.email?.toLowerCase() }],
         isActive: true,
-      }).lean();
+      } as any).lean();
     } else {
       staffRecord = Array.from(db.staff.values()).find(
-        (s) => s.email.toLowerCase() === decodedToken.email?.toLowerCase() && s.isActive
+        (s) => s.email.toLowerCase() === decodedToken.email?.toLowerCase() && (s.isActive ?? s.active)
       );
     }
 

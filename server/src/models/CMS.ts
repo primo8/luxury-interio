@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface ICMSDocument extends Document {
+export interface ICMSDocument {
   key: string;
   heroTitle: string;
   heroSubtitle: string;

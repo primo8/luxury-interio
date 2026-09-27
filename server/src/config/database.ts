@@ -5,15 +5,19 @@ let isConnected = false;
 export interface DatabaseStatus {
   connected: boolean;
   state: string;
-  host?: string;
-  name?: string;
+  provider: string;
 }
 
 export async function connectDatabase(): Promise<boolean> {
   const uri = process.env.MONGODB_URI;
+  const isProduction = process.env.NODE_ENV === 'production';
 
   if (!uri) {
-    console.log('ℹ️ [Database] No MONGODB_URI detected in environment. Using in-memory fallback for local development.');
+    if (isProduction) {
+      console.error('❌ [Database] CRITICAL: MONGODB_URI is missing in production environment. MongoDB Atlas is mandatory.');
+    } else {
+      console.log('ℹ️ [Database] No MONGODB_URI detected in environment. Using in-memory fallback for local development.');
+    }
     return false;
   }
 
@@ -32,8 +36,7 @@ export async function connectDatabase(): Promise<boolean> {
     });
 
     isConnected = true;
-    const sanitizedHost = conn.connection.host ? conn.connection.host.replace(/:[^@]+@/, ':***@') : 'Atlas Cluster';
-    console.log(`✅ [Database] Connected to MongoDB Atlas: ${sanitizedHost} (DB: ${conn.connection.name})`);
+    console.log(`✅ [Database] Connected to MongoDB Atlas (DB: ${conn.connection.name || 'furnitura'})`);
 
     mongoose.connection.on('error', (err) => {
       console.error('❌ [Database] MongoDB connection error:', err.message || err);
@@ -70,8 +73,7 @@ export function getDatabaseStatus(): DatabaseStatus {
   return {
     connected: isDatabaseConnected(),
     state,
-    host: isConnected && mongoose.connection.host ? 'Connected (Atlas)' : undefined,
-    name: isConnected ? mongoose.connection.name : undefined,
+    provider: isDatabaseConnected() ? 'MongoDB Atlas' : 'In-Memory State',
   };
 }
 

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export interface IColorOption {
   name: string;
@@ -6,7 +6,7 @@ export interface IColorOption {
   threeColor: number;
 }
 
-export interface IProductDocument extends Document {
+export interface IProductDocument {
   id: string;
   name: string;
   slug: string;

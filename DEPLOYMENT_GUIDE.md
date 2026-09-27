@@ -83,7 +83,7 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
 ## 3. 🚀 Render Backend Deployment
 
 1. **Create Web Service**:
-   * Connect your GitHub repository (`primo8/chair`) on [Render Dashboard](https://dashboard.render.com/).
+   * Connect your GitHub repository (`primo8/luxury-interio`) on [Render Dashboard](https://dashboard.render.com/).
    * Click **New → Web Service**.
 2. **Configure Settings**:
    * **Name**: `furnitura-api`
@@ -105,7 +105,8 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
    * `MTN_API_USER`: `<MTN API User UUID>`
    * `MTN_API_KEY`: `<MTN API Key>`
    * `MTN_TARGET_ENVIRONMENT`: `sandbox`
-   * `MTN_CURRENCY`: `EUR`
+   * `MTN_CURRENCY`: `EUR` (or configured provider currency)
+   * `MTN_CALLBACK_URL`: `<Optional Callback URL>`
    * `CORS_ORIGINS`: `https://furnitura.pages.dev,https://admin-furnitura.pages.dev`
 
 ---
@@ -115,13 +116,13 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
 ### Storefront Deployment
 1. Go to [Cloudflare Dashboard → Workers & Pages](https://dash.cloudflare.com/).
 2. Click **Create Application → Pages → Connect to Git**.
-3. Select `primo8/chair` repository.
+3. Select `primo8/luxury-interio` repository.
 4. **Build Settings**:
    * **Framework Preset**: `Vite`
-   * **Build Command**: `npm run build`
+   * **Build Command**: `npm run build:frontend` (or `npm run build`)
    * **Build Output Directory**: `dist`
 5. **Environment Variables**:
-   * `VITE_API_URL`: `https://furnitura-api.onrender.com` (or your custom API domain)
+   * `VITE_API_URL`: `https://furnitura-api.onrender.com` (or custom Render API domain)
    * `VITE_FIREBASE_API_KEY`: `<Firebase API Key>`
    * `VITE_FIREBASE_AUTH_DOMAIN`: `<Project>.firebaseapp.com`
    * `VITE_FIREBASE_PROJECT_ID`: `<Project ID>`
@@ -134,3 +135,4 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
 * **Health Check**: `GET https://furnitura-api.onrender.com/health`
 * **Database Health**: `GET https://furnitura-api.onrender.com/health/database`
 * **MoMo Diagnostics**: `GET https://furnitura-api.onrender.com/api/payments/mtn/config-status`
+

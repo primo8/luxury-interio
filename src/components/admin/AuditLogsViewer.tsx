@@ -117,7 +117,7 @@ export function AuditLogsViewer() {
                     </td>
                     <td style={{ fontSize: '0.8rem', maxWidth: '300px' }}>{log.details}</td>
                     <td style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--admin-text-muted)' }}>
-                      {log.ipAddress || '127.0.0.1'}
+                      {log.ipAddress || '—'}
                     </td>
                   </tr>
                 ))

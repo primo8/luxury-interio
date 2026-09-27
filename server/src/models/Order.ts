@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export interface IOrderItem {
   productId: string;
@@ -21,7 +21,7 @@ export interface IOrderTimelineEvent {
   note?: string;
 }
 
-export interface IOrderDocument extends Document {
+export interface IOrderDocument {
   id: string;
   orderNumber: string;
   customerId?: string;

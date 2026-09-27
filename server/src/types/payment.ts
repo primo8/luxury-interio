@@ -47,6 +47,7 @@ export interface ServerOrder {
 }
 
 export interface PaymentRecord {
+  id?: string;
   paymentId: string;
   orderId: string;
   externalId: string;

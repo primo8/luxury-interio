@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface IDiscountDocument extends Document {
+export interface IDiscountDocument {
   id: string;
   code: string;
   name: string;

@@ -1,4 +1,5 @@
-import admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 let isFirebaseAdminInitialized = false;
 
@@ -19,18 +20,19 @@ export function initFirebaseAdmin(): boolean {
   }
 
   try {
-    // Handle escaped newlines in environment variable
     if (privateKey.includes('\\n')) {
       privateKey = privateKey.replace(/\\n/g, '\n');
     }
 
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
+    if (getApps().length === 0) {
+      initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+    }
 
     isFirebaseAdminInitialized = true;
     console.log(`✅ [Firebase Admin] Initialized successfully for project: ${projectId}`);
@@ -41,10 +43,15 @@ export function initFirebaseAdmin(): boolean {
   }
 }
 
-export function getFirebaseAdmin() {
-  return admin;
-}
-
 export function isFirebaseAuthActive(): boolean {
   return isFirebaseAdminInitialized;
 }
+
+export function getFirebaseAdmin() {
+  return {
+    auth: getAuth,
+  };
+}
+
+export { getAuth };
+

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export interface IPaymentEvent {
   status: string;
@@ -7,7 +7,7 @@ export interface IPaymentEvent {
   source: 'GATEWAY_CALLBACK' | 'STATUS_POLL' | 'MANUAL_RECONCILE' | 'SYSTEM';
 }
 
-export interface IPaymentDocument extends Document {
+export interface IPaymentDocument {
   id: string;
   paymentId: string;
   orderId: string;
