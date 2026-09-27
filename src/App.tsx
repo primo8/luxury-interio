@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { AdminProvider, useAdmin } from './context/AdminContext';
+import { AdminLayout } from './components/admin/AdminLayout';
 import { TopAnnouncement } from './components/layout/TopAnnouncement';
 import { Header } from './components/layout/Header';
 import { NavigationBar } from './components/layout/NavigationBar';
@@ -26,11 +28,19 @@ import { PRODUCTS } from './data/products';
 
 export function AppContent() {
   const { openCart } = useCart();
+  const { isAdminView, setIsAdminView } = useAdmin();
   const [activeRoom, setActiveRoom] = useState<RoomType>('all');
   const [activeMobileTab, setActiveMobileTab] = useState<'home' | 'categories' | '3d' | 'wishlist' | 'cart'>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSandboxTestOpen, setIsSandboxTestOpen] = useState(false);
+
+  // Expose global helper for header/announcement toggle
+  useEffect(() => {
+    (window as any).__toggleAdmin = () => {
+      setIsAdminView(!isAdminView);
+    };
+  }, [isAdminView, setIsAdminView]);
 
   // Direct Buy Now Item State (Bypasses cart when Buy Now is clicked)
   const [directBuyItem, setDirectBuyItem] = useState<DirectBuyItem | null>(null);
@@ -112,6 +122,10 @@ export function AppContent() {
     setDirectBuyItem(null); // Use standard cart items
     setIsCheckoutOpen(true);
   };
+
+  if (isAdminView) {
+    return <AdminLayout />;
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -259,10 +273,12 @@ export function AppContent() {
 
 export default function App() {
   return (
-    <WishlistProvider>
-      <CartProvider>
-        <AppContent />
-      </CartProvider>
-    </WishlistProvider>
+    <AdminProvider>
+      <WishlistProvider>
+        <CartProvider>
+          <AppContent />
+        </CartProvider>
+      </WishlistProvider>
+    </AdminProvider>
   );
 }

@@ -1,21 +1,26 @@
 import type { PaymentRecord, PaymentStatus } from '../../types/payment';
-
-// In-memory payment store
-const payments = new Map<string, PaymentRecord>();
+import { db } from '../../db/memoryDb';
 
 export const paymentStore = {
   save(payment: PaymentRecord): PaymentRecord {
-    payments.set(payment.mtnReferenceId, { ...payment });
+    db.payments.set(payment.mtnReferenceId, { ...payment });
     return payment;
   },
 
   getByReferenceId(referenceId: string): PaymentRecord | undefined {
-    return payments.get(referenceId);
+    return db.payments.get(referenceId);
   },
 
   getByOrderId(orderId: string): PaymentRecord | undefined {
-    for (const record of payments.values()) {
-      if (record.orderId === orderId) return record;
+    for (const record of db.payments.values()) {
+      if (record.orderId === orderId || record.externalId === orderId) return record;
+    }
+    return undefined;
+  },
+
+  getById(paymentId: string): PaymentRecord | undefined {
+    for (const record of db.payments.values()) {
+      if (record.paymentId === paymentId) return record;
     }
     return undefined;
   },
@@ -25,7 +30,7 @@ export const paymentStore = {
     status: PaymentStatus, 
     options?: { failureReason?: string; financialTransactionId?: string }
   ): PaymentRecord | undefined {
-    const record = payments.get(referenceId);
+    const record = db.payments.get(referenceId);
     if (!record) return undefined;
 
     record.status = status;
@@ -33,17 +38,17 @@ export const paymentStore = {
     if (options?.failureReason) record.failureReason = options.failureReason;
     if (options?.financialTransactionId) record.financialTransactionId = options.financialTransactionId;
 
-    payments.set(referenceId, record);
+    db.payments.set(referenceId, record);
     return record;
   },
 
   getAll(): PaymentRecord[] {
-    return Array.from(payments.values()).sort(
+    return Array.from(db.payments.values()).sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   },
 
   clear(): void {
-    payments.clear();
+    db.payments.clear();
   },
 };

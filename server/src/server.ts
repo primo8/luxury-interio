@@ -2,6 +2,8 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import cors from 'cors';
 import { config, getSafeConfigDiagnostic } from './config/env';
 import paymentRoutes from './routes/paymentRoutes';
+import adminRoutes from './routes/adminRoutes';
+import storeRoutes from './routes/storeRoutes';
 
 const app = express();
 
@@ -11,7 +13,7 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Request logger for debugging without sensitive data
@@ -25,13 +27,15 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
-    service: 'FURNITURA Luxury Payment Server',
+    service: 'FURNITURA Luxury Commerce & Admin Server',
     timestamp: new Date().toISOString(),
     sandbox: getSafeConfigDiagnostic(),
   });
 });
 
-// Mount Payment Routes
+// Mount Routes
+app.use('/api/admin', adminRoutes);
+app.use('/api/store', storeRoutes);
 app.use('/api/payments/mtn', paymentRoutes);
 
 // Safe 404 handler
