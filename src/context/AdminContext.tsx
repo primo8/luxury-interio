@@ -143,7 +143,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Verify server-side RBAC and fetch admin profile
-  const verifyServerRbac = useCallback(async (token: string) => {
+  const verifyServerRbac = useCallback(async (token: string): Promise<{ success: boolean; message?: string }> => {
     try {
       const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
       const res = await fetch(`${apiOrigin}/api/admin/auth/me`, {
@@ -153,26 +153,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.user) {
-          setCurrentUser({
-            id: data.user.id || DEFAULT_USER.id,
-            name: data.user.name || DEFAULT_USER.name,
-            email: data.user.email || DEFAULT_USER.email,
-            role: data.user.role || DEFAULT_USER.role,
-            avatar: data.user.avatar || DEFAULT_USER.avatar,
-            permissions: data.user.permissions || DEFAULT_USER.permissions,
-            phone: data.user.phone || DEFAULT_USER.phone,
-          });
-          setIsAuthenticated(true);
-          return true;
-        }
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success && data.user) {
+        setCurrentUser({
+          id: data.user.id || DEFAULT_USER.id,
+          name: data.user.name || DEFAULT_USER.name,
+          email: data.user.email || DEFAULT_USER.email,
+          role: data.user.role || DEFAULT_USER.role,
+          avatar: data.user.avatar || DEFAULT_USER.avatar,
+          permissions: data.user.permissions || DEFAULT_USER.permissions,
+          phone: data.user.phone || DEFAULT_USER.phone,
+        });
+        setIsAuthenticated(true);
+        return { success: true };
       }
-      return false;
-    } catch (err) {
+
+      return {
+        success: false,
+        message:
+          data.message ||
+          (res.status === 403
+            ? 'Access Denied: Your account was authenticated, but is not registered or active in the staff directory.'
+            : res.status === 401
+            ? 'Authentication failed: Invalid or expired session token.'
+            : `Server returned HTTP ${res.status}: ${res.statusText}`),
+      };
+    } catch (err: any) {
       console.error('[AdminContext] RBAC verification error:', err);
-      return false;
+      const apiOrigin = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      return {
+        success: false,
+        message: `Backend Connection Error: Unable to reach backend API at '${apiOrigin}'. Ensure backend is deployed and VITE_API_URL is configured.`,
+      };
     }
   }, []);
 
@@ -188,12 +201,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       localStorage.getItem('furnitura_admin_token') || sessionStorage.getItem('furnitura_admin_token');
 
     if (existingToken) {
-      verifyServerRbac(existingToken).then((valid) => {
+      verifyServerRbac(existingToken).then((authRes) => {
         if (isMounted) {
-          if (!valid && !isClientFirebaseConfigured) {
+          if (!authRes.success && !isClientFirebaseConfigured) {
             // In dev mode with fallback token, keep active
             setIsAuthenticated(true);
-          } else if (!valid) {
+          } else if (!authRes.success) {
             setIsAuthenticated(false);
             localStorage.removeItem('furnitura_admin_token');
           }
@@ -212,7 +225,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           try {
             const token = await fbUser.getIdToken();
             localStorage.setItem('furnitura_admin_token', token);
-            await verifyServerRbac(token);
+            const rbacRes = await verifyServerRbac(token);
+            if (!rbacRes.success) {
+              localStorage.removeItem('furnitura_admin_token');
+              setIsAuthenticated(false);
+            }
           } catch (err) {
             console.error('[Firebase Auth] Failed to get ID token:', err);
           }
@@ -237,9 +254,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       let token = '';
 
       if (isClientFirebaseConfigured && auth) {
-        // Firebase Client SDK login
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        token = await userCredential.user.getIdToken();
+        try {
+          // Attempt Firebase Client SDK login
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          token = await userCredential.user.getIdToken();
+        } catch (fbErr: any) {
+          // If Email/Password is disabled in Firebase Console (auth/operation-not-allowed) or user is not in Firebase Auth,
+          // fall back gracefully to direct staff credentials verified on backend
+          if (
+            fbErr.code === 'auth/operation-not-allowed' ||
+            fbErr.code === 'auth/user-not-found' ||
+            fbErr.code === 'auth/invalid-credential'
+          ) {
+            console.warn(
+              '[Firebase Auth] Email/Password provider not enabled in Firebase Console. Falling back to direct staff auth API...'
+            );
+            const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+            const res = await fetch(`${apiOrigin}/api/admin/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!data.success) {
+              return { success: false, message: data.message || 'Invalid credentials' };
+            }
+            token = data.token || `furn-session-${Date.now()}`;
+            if (data.user) {
+              setCurrentUser(data.user);
+            }
+          } else {
+            throw fbErr;
+          }
+        }
       } else {
         // Direct RBAC server login fallback (for dev or direct staff auth)
         const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
@@ -248,7 +295,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!data.success) {
           return { success: false, message: data.message || 'Invalid credentials' };
         }
@@ -259,7 +306,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       }
 
       localStorage.setItem('furnitura_admin_token', token);
-      await verifyServerRbac(token);
+      const authRes = await verifyServerRbac(token);
+      if (!authRes.success) {
+        setIsAuthenticated(false);
+        localStorage.removeItem('furnitura_admin_token');
+        return { success: false, message: authRes.message || 'Access verification failed.' };
+      }
+
       setIsAuthenticated(true);
       showAdminToast('Signed in successfully to Admin Command Center', 'success');
       return { success: true };
@@ -288,10 +341,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       const token = await userCredential.user.getIdToken();
 
       localStorage.setItem('furnitura_admin_token', token);
-      const isAuthorized = await verifyServerRbac(token);
+      const authRes = await verifyServerRbac(token);
 
-      if (!isAuthorized) {
-        // Successfully authenticated by Google, but not registered/active in StaffModel
+      if (!authRes.success) {
+        // Failed verification
         await signOut(auth);
         localStorage.removeItem('furnitura_admin_token');
         sessionStorage.removeItem('furnitura_admin_token');
@@ -299,6 +352,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         return {
           success: false,
           message:
+            authRes.message ||
             'Access Denied: Your Google account was authenticated, but is not authorized as an active staff member in FURNITURA.',
         };
       }

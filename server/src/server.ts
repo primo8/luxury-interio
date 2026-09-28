@@ -44,8 +44,14 @@ app.use(
         }
       }
 
-      // In production, strictly enforce configured origins
-      if (configuredOrigins.length > 0 && configuredOrigins.includes(origin)) {
+      // In production, allow configured origins and all Cloudflare Workers & Pages domains
+      if (
+        (configuredOrigins.length > 0 && configuredOrigins.includes(origin)) ||
+        origin.endsWith('.workers.dev') ||
+        origin.endsWith('.pages.dev') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
         return callback(null, true);
       }
 
