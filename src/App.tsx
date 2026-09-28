@@ -23,6 +23,7 @@ import { WishlistDrawer } from './components/cart/WishlistDrawer';
 import { CheckoutModal } from './components/cart/CheckoutModal';
 import { MtnSandboxTestPanel } from './components/admin/MtnSandboxTestPanel';
 import { ToastContainer, type ToastMessage } from './components/common/Toast';
+import { IS_ADMIN_MODE, IS_CLIENT_MODE } from './config/appMode';
 import type { Product, RoomType, DirectBuyItem, ColorOption } from './types';
 import { PRODUCTS } from './data/products';
 
@@ -35,11 +36,13 @@ export function AppContent() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSandboxTestOpen, setIsSandboxTestOpen] = useState(false);
 
-  // Expose global helper for header/announcement toggle
+  // Expose global helper for header/announcement toggle only in non-client mode
   useEffect(() => {
-    (window as any).__toggleAdmin = () => {
-      setIsAdminView(!isAdminView);
-    };
+    if (!IS_CLIENT_MODE) {
+      (window as any).__toggleAdmin = () => {
+        setIsAdminView(!isAdminView);
+      };
+    }
   }, [isAdminView, setIsAdminView]);
 
   // Direct Buy Now Item State (Bypasses cart when Buy Now is clicked)
@@ -123,7 +126,7 @@ export function AppContent() {
     setIsCheckoutOpen(true);
   };
 
-  if (isAdminView) {
+  if (IS_ADMIN_MODE || (!IS_CLIENT_MODE && isAdminView)) {
     return <AdminLayout />;
   }
 

@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { getSafeConfigDiagnostic } from '../config/env';
+import { isDatabaseConnected } from '../config/database';
 import { createServerOrder, getOrder, updateOrderStatus } from '../services/orderService';
 import { initiateRequestToPay } from '../services/mtn/mtnCollection';
 import { checkPaymentStatus } from '../services/mtn/mtnPaymentStatus';
@@ -13,6 +14,14 @@ import type { PaymentStatus } from '../types/payment';
  */
 export async function createOrderAndPay(req: Request, res: Response) {
   try {
+    if (process.env.NODE_ENV === 'production' && !isDatabaseConnected()) {
+      return res.status(503).json({
+        success: false,
+        message: 'MongoDB Atlas database is currently unavailable. Orders cannot be processed.',
+        error: 'DATABASE_UNAVAILABLE',
+      });
+    }
+
     const { items, customer, couponCode, phoneNumber, orderId } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {

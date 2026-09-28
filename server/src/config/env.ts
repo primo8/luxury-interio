@@ -51,15 +51,18 @@ export function getSafeConfigDiagnostic() {
   if (!config.mtnApiUser.trim()) missingKeys.push('MTN_API_USER');
   if (!config.mtnApiKey.trim()) missingKeys.push('MTN_API_KEY');
 
+  const configured = isMtnConfigured();
+
   return {
     environment: config.mtnTargetEnvironment,
-    isConfigured: isMtnConfigured(),
+    isConfigured: configured,
+    statusText: configured ? 'MTN MoMo: CONFIGURED' : 'MTN MoMo: NOT CONFIGURED',
     missingKeys,
     mtnCurrency: config.mtnCurrency,
     storeCurrency: config.storeCurrency,
     baseUrl: config.mtnBaseUrl,
     hasCallbackUrl: Boolean(config.mtnCallbackUrl.trim()),
     callbackUrl: config.mtnCallbackUrl || 'Not configured (using status polling)',
-    mode: isMtnConfigured() ? 'LIVE_SANDBOX' : 'SIMULATED_SANDBOX_DEV',
+    mode: configured ? 'LIVE_SANDBOX' : 'NOT_CONFIGURED',
   };
 }

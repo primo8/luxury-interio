@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { auth, isClientFirebaseConfigured } from '../config/firebase';
+import { IS_ADMIN_MODE, IS_CLIENT_MODE } from '../config/appMode';
 import { fetchAdminNotifications, fetchAdminDashboard } from '../utils/adminApi';
 
 export type AdminTab =
@@ -43,6 +46,10 @@ interface AdminContextType {
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
   currentUser: AdminUser;
+  isAuthenticated: boolean;
+  isLoadingAuth: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
   unreadNotificationsCount: number;
   selectedOrderId: string | null;
   setSelectedOrderId: (id: string | null) => void;
@@ -91,8 +98,10 @@ const DEFAULT_USER: AdminUser = {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  // Check URL hash or default
+  // Determine if admin view is active based on deployment mode or explicit navigation
   const [isAdminView, setIsAdminView] = useState<boolean>(() => {
+    if (IS_CLIENT_MODE) return false;
+    if (IS_ADMIN_MODE) return true;
     return window.location.hash.startsWith('#/admin') || window.location.pathname.startsWith('/admin');
   });
 
@@ -100,7 +109,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [currentUser] = useState<AdminUser>(DEFAULT_USER);
+  const [currentUser, setCurrentUser] = useState<AdminUser>(DEFAULT_USER);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    // If not in admin mode, default authenticated state is not required
+    if (IS_CLIENT_MODE) return false;
+    const token = localStorage.getItem('furnitura_admin_token') || sessionStorage.getItem('furnitura_admin_token');
+    return Boolean(token);
+  });
+  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(4);
   const [dashboardData, setDashboardData] = useState<any>(null);
 
@@ -125,7 +141,155 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setAdminToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Verify server-side RBAC and fetch admin profile
+  const verifyServerRbac = useCallback(async (token: string) => {
+    try {
+      const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const res = await fetch(`${apiOrigin}/api/admin/auth/me`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          setCurrentUser({
+            id: data.user.id || DEFAULT_USER.id,
+            name: data.user.name || DEFAULT_USER.name,
+            email: data.user.email || DEFAULT_USER.email,
+            role: data.user.role || DEFAULT_USER.role,
+            avatar: data.user.avatar || DEFAULT_USER.avatar,
+            permissions: data.user.permissions || DEFAULT_USER.permissions,
+            phone: data.user.phone || DEFAULT_USER.phone,
+          });
+          setIsAuthenticated(true);
+          return true;
+        }
+      }
+      return false;
+    } catch (err) {
+      console.error('[AdminContext] RBAC verification error:', err);
+      return false;
+    }
+  }, []);
+
+  // Initialize auth state
+  useEffect(() => {
+    if (IS_CLIENT_MODE) {
+      setIsLoadingAuth(false);
+      return;
+    }
+
+    let isMounted = true;
+    const existingToken =
+      localStorage.getItem('furnitura_admin_token') || sessionStorage.getItem('furnitura_admin_token');
+
+    if (existingToken) {
+      verifyServerRbac(existingToken).then((valid) => {
+        if (isMounted) {
+          if (!valid && !isClientFirebaseConfigured) {
+            // In dev mode with fallback token, keep active
+            setIsAuthenticated(true);
+          } else if (!valid) {
+            setIsAuthenticated(false);
+            localStorage.removeItem('furnitura_admin_token');
+          }
+          setIsLoadingAuth(false);
+        }
+      });
+    } else {
+      setIsLoadingAuth(false);
+    }
+
+    // If client Firebase SDK is configured, subscribe to auth state
+    if (isClientFirebaseConfigured && auth) {
+      const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+        if (!isMounted) return;
+        if (fbUser) {
+          try {
+            const token = await fbUser.getIdToken();
+            localStorage.setItem('furnitura_admin_token', token);
+            await verifyServerRbac(token);
+          } catch (err) {
+            console.error('[Firebase Auth] Failed to get ID token:', err);
+          }
+        }
+        setIsLoadingAuth(false);
+      });
+
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [verifyServerRbac]);
+
+  // Login handler
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      let token = '';
+
+      if (isClientFirebaseConfigured && auth) {
+        // Firebase Client SDK login
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        token = await userCredential.user.getIdToken();
+      } else {
+        // Direct RBAC server login fallback (for dev or direct staff auth)
+        const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+        const res = await fetch(`${apiOrigin}/api/admin/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          return { success: false, message: data.message || 'Invalid credentials' };
+        }
+        token = data.token || `furn-session-${Date.now()}`;
+        if (data.user) {
+          setCurrentUser(data.user);
+        }
+      }
+
+      localStorage.setItem('furnitura_admin_token', token);
+      await verifyServerRbac(token);
+      setIsAuthenticated(true);
+      showAdminToast('Signed in successfully to Admin Command Center', 'success');
+      return { success: true };
+    } catch (err: any) {
+      console.error('[Admin Login Failed]', err);
+      return {
+        success: false,
+        message: err.message || 'Login failed. Please check your credentials.',
+      };
+    }
+  };
+
+  // Logout handler
+  const logout = async () => {
+    try {
+      if (isClientFirebaseConfigured && auth) {
+        await signOut(auth);
+      }
+    } catch (err) {
+      console.warn('[Admin Logout Warning]', err);
+    } finally {
+      localStorage.removeItem('furnitura_admin_token');
+      sessionStorage.removeItem('furnitura_admin_token');
+      setIsAuthenticated(false);
+      setCurrentUser(DEFAULT_USER);
+      showAdminToast('Signed out of Admin Command Center', 'info');
+    }
+  };
+
   const refreshDashboardStats = async () => {
+    if (!isAuthenticated && IS_ADMIN_MODE) return;
     try {
       const [dashRes, notifRes] = await Promise.all([
         fetchAdminDashboard(),
@@ -143,26 +307,29 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (isAdminView) {
+    if (isAdminView && isAuthenticated) {
       refreshDashboardStats();
     }
-  }, [isAdminView]);
+  }, [isAdminView, isAuthenticated]);
 
-  // Global Keyboard shortcuts: Ctrl+K for search, Ctrl+Shift+A for Admin toggle
+  // Global Keyboard shortcuts: Ctrl+K for search, Ctrl+Shift+A for Admin toggle (only if not client mode)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
+        if (isAdminView) {
+          e.preventDefault();
+          setIsSearchOpen((prev) => !prev);
+        }
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+      // Only allow toggle if not strictly forced to client mode
+      if (!IS_CLIENT_MODE && (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         setIsAdminView((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isAdminView]);
 
   const navigateToTab = (tab: AdminTab, contextId?: string) => {
     setActiveTab(tab);
@@ -173,11 +340,23 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (tab === 'customers' && contextId) setSelectedCustomerId(contextId);
   };
 
+  const setAdminViewSafely = (active: boolean) => {
+    if (IS_CLIENT_MODE) {
+      setIsAdminView(false);
+      return;
+    }
+    if (IS_ADMIN_MODE) {
+      setIsAdminView(true);
+      return;
+    }
+    setIsAdminView(active);
+  };
+
   return (
     <AdminContext.Provider
       value={{
-        isAdminView,
-        setIsAdminView,
+        isAdminView: IS_CLIENT_MODE ? false : IS_ADMIN_MODE ? true : isAdminView,
+        setIsAdminView: setAdminViewSafely,
         activeTab,
         setActiveTab,
         sidebarCollapsed,
@@ -187,6 +366,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         isSearchOpen,
         setIsSearchOpen,
         currentUser,
+        isAuthenticated,
+        isLoadingAuth,
+        login,
+        logout,
         unreadNotificationsCount,
         selectedOrderId,
         setSelectedOrderId,

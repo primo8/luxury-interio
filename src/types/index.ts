@@ -108,13 +108,14 @@ export type PaymentStatus =
 export interface PaymentDiagnostic {
   environment: string;
   isConfigured: boolean;
+  statusText?: string;
   missingKeys: string[];
   mtnCurrency: string;
   storeCurrency: string;
   baseUrl: string;
   hasCallbackUrl: boolean;
   callbackUrl: string;
-  mode: 'LIVE_SANDBOX' | 'SIMULATED_SANDBOX_DEV';
+  mode: 'LIVE_SANDBOX' | 'NOT_CONFIGURED' | 'SIMULATED_SANDBOX_DEV';
 }
 
 export interface PaymentTransactionRecord {

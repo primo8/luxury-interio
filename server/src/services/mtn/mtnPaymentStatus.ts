@@ -45,7 +45,7 @@ export async function checkPaymentStatus(referenceId: string): Promise<PaymentSt
     };
   }
 
-  // If in simulated sandbox mode, the timeout in initiateRequestToPay or manual test panel updates it
+  // If unconfigured, return record without pretending simulation
   if (!isMtnConfigured()) {
     const order = getOrder(localRecord.orderId);
     return {
@@ -55,9 +55,9 @@ export async function checkPaymentStatus(referenceId: string): Promise<PaymentSt
       amount: localRecord.amount,
       currency: localRecord.currency,
       phoneNumberMasked: localRecord.phoneNumberMasked,
-      isSimulated: true,
+      isSimulated: false,
       financialTransactionId: localRecord.financialTransactionId,
-      failureReason: localRecord.failureReason,
+      failureReason: localRecord.failureReason || 'MTN MoMo: NOT CONFIGURED',
       updatedAt: localRecord.updatedAt,
       orderStatus: order?.paymentStatus || localRecord.status,
     };

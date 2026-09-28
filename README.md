@@ -1,6 +1,6 @@
-# FURNITURA
+# FURNITURA (`luxury-interio`)
 
-A luxury furniture eCommerce and business management platform.
+A luxury modern furniture eCommerce and enterprise business management platform (`primo8/luxury-interio`).
 
 FURNITURA combines an editorial customer storefront with an enterprise-grade Admin Command Center, powered by a scalable cloud backend architecture designed for global high-ticket luxury commerce.
 

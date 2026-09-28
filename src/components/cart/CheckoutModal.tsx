@@ -836,7 +836,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         }}
                       />
                       <span>
-                        MTN Gateway: <strong>{diagnostic.mode === 'LIVE_SANDBOX' ? 'MTN MoMo Sandbox (Live)' : 'MTN Sandbox Dev Simulator'}</strong>
+                        MTN Gateway: <strong>{diagnostic.isConfigured ? 'MTN MoMo Sandbox (Live)' : 'MTN MoMo: NOT CONFIGURED'}</strong>
                       </span>
                     </div>
                     {onOpenTestPanel && (
@@ -904,14 +904,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       style={{
                         fontSize: '0.7rem',
                         fontWeight: 800,
-                        backgroundColor: 'var(--color-plum-800)',
+                        backgroundColor: diagnostic?.isConfigured ? 'var(--color-plum-800)' : '#78716C',
                         color: '#ffffff',
                         padding: '3px 8px',
                         borderRadius: '20px',
                         letterSpacing: '0.5px',
                       }}
                     >
-                      OFFICIAL SANDBOX
+                      {diagnostic?.isConfigured ? 'OFFICIAL SANDBOX' : 'NOT CONFIGURED'}
                     </span>
                   </div>
 

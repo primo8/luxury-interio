@@ -13,8 +13,10 @@ import {
   Package,
   Store,
   ChevronDown,
+  LogOut,
 } from 'lucide-react';
 import { useAdmin, type AdminTab } from '../../context/AdminContext';
+import { IS_ADMIN_MODE } from '../../config/appMode';
 
 export function AdminHeader() {
   const {
@@ -25,6 +27,7 @@ export function AdminHeader() {
     currentUser,
     unreadNotificationsCount,
     setIsAdminView,
+    logout,
   } = useAdmin();
 
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
@@ -455,13 +458,27 @@ export function AdminHeader() {
 
               <div style={{ borderTop: '1px solid var(--admin-border-light)', margin: '0.35rem 0' }} />
 
+              {!IS_ADMIN_MODE && (
+                <button
+                  onClick={() => setIsAdminView(false)}
+                  className="admin-nav-item"
+                  style={{ color: 'var(--admin-plum)' }}
+                >
+                  <Store size={16} />
+                  <span>Return to Storefront</span>
+                </button>
+              )}
+
               <button
-                onClick={() => setIsAdminView(false)}
+                onClick={async () => {
+                  setIsProfileOpen(false);
+                  await logout();
+                }}
                 className="admin-nav-item"
-                style={{ color: 'var(--admin-plum)' }}
+                style={{ color: '#EF4444' }}
               >
-                <Store size={16} />
-                <span>Return to Storefront</span>
+                <LogOut size={16} />
+                <span>Sign Out</span>
               </button>
             </div>
           )}

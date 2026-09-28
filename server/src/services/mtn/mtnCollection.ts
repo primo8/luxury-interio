@@ -117,39 +117,24 @@ export async function initiateRequestToPay(params: RequestToPayParams): Promise<
 
   // 6. Handle unconfigured MTN credentials state
   if (!isMtnConfigured()) {
-    console.log(`ℹ️ [MTN MoMo] Credentials not provided (MTN status: NOT CONFIGURED). Order ${orderId}, Ref: ${referenceId}`);
+    console.log(`ℹ️ [MTN MoMo] Credentials not provided (MTN MoMo: NOT CONFIGURED). Order ${orderId}, Ref: ${referenceId}`);
 
-    if (process.env.NODE_ENV === 'production') {
-      paymentStore.updateStatus(referenceId, 'FAILED', {
-        failureReason: 'MTN MoMo API credentials are NOT CONFIGURED on this server.',
-      });
-      updateOrderStatus(orderId, 'FAILED');
+    paymentStore.updateStatus(referenceId, 'FAILED', {
+      failureReason: 'MTN MoMo: NOT CONFIGURED',
+    });
+    updateOrderStatus(orderId, 'FAILED');
 
-      return {
-        success: false,
-        referenceId,
-        orderId,
-        status: 'FAILED',
-        amount: amountToCharge,
-        currency: paymentCurrency,
-        phoneNumberMasked: maskedPhone,
-        isSimulated: false,
-        message: 'MTN MoMo Gateway credentials are not configured on this server (MTN status: NOT CONFIGURED).',
-        error: 'MTN_NOT_CONFIGURED',
-      };
-    }
-
-    // In local development / sandbox test mode without credentials
     return {
-      success: true,
+      success: false,
       referenceId,
       orderId,
-      status: 'PENDING',
+      status: 'FAILED',
       amount: amountToCharge,
       currency: paymentCurrency,
       phoneNumberMasked: maskedPhone,
-      isSimulated: true,
-      message: 'Payment request initiated in sandbox development mode. MTN status: NOT CONFIGURED.',
+      isSimulated: false,
+      message: 'MTN MoMo: NOT CONFIGURED',
+      error: 'MTN_NOT_CONFIGURED',
     };
   }
 

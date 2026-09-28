@@ -3,6 +3,7 @@ import { Search, User, Heart, ShoppingBag, Menu, X, ArrowRight, Clock, Compass }
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { PRODUCTS } from '../../data/products';
+import { IS_CLIENT_MODE } from '../../config/appMode';
 import type { Product, RoomType } from '../../types';
 
 interface HeaderProps {
@@ -390,32 +391,34 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Account, Wishlist, Cart Actions */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '18px' }}>
-          {/* Admin Command Center Access */}
-          <button
-            onClick={() => {
-              if ((window as any).__toggleAdmin) {
-                (window as any).__toggleAdmin();
-              }
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              background: 'linear-gradient(135deg, #1E0A1E 0%, #3B184F 100%)',
-              color: 'var(--color-gold)',
-              border: '1px solid rgba(212, 175, 55, 0.4)',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(30, 10, 30, 0.15)',
-            }}
-            className="hidden-mobile"
-            title="Switch to FURNITURA Admin Dashboard"
-          >
-            <span>Admin</span>
-          </button>
+          {/* Admin Command Center Access - Hidden in client mode */}
+          {!IS_CLIENT_MODE && (
+            <button
+              onClick={() => {
+                if ((window as any).__toggleAdmin) {
+                  (window as any).__toggleAdmin();
+                }
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                background: 'linear-gradient(135deg, #1E0A1E 0%, #3B184F 100%)',
+                color: 'var(--color-gold)',
+                border: '1px solid rgba(212, 175, 55, 0.4)',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(30, 10, 30, 0.15)',
+              }}
+              className="hidden-mobile"
+              title="Switch to FURNITURA Admin Dashboard"
+            >
+              <span>Admin</span>
+            </button>
+          )}
 
           {/* Account */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} className="hidden-mobile">

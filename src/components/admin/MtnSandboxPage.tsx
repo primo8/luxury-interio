@@ -144,8 +144,8 @@ export function MtnSandboxPage() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.65rem 0.85rem', background: 'var(--admin-bg)', borderRadius: '8px' }}>
               <span style={{ color: 'var(--admin-text-secondary)' }}>Engine Mode:</span>
-              <span style={{ fontWeight: 700, color: 'var(--admin-success)' }}>
-                {diagnostics?.mode || 'SIMULATED_SANDBOX_DEV'}
+              <span style={{ fontWeight: 700, color: diagnostics?.isConfigured ? 'var(--admin-success)' : '#D97706' }}>
+                {diagnostics?.isConfigured ? 'LIVE_SANDBOX' : 'MTN MoMo: NOT CONFIGURED'}
               </span>
             </div>
 

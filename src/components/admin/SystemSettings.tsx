@@ -89,8 +89,8 @@ export function SystemSettings() {
 
           <div style={{ background: 'var(--admin-bg)', padding: '0.85rem', borderRadius: '8px' }}>
             <span className="admin-label">Integration Engine</span>
-            <div style={{ fontWeight: 700, color: 'var(--admin-success)' }}>
-              {mtnDiagnostic?.mode || 'SIMULATED_SANDBOX_DEV'}
+            <div style={{ fontWeight: 700, color: mtnDiagnostic?.isConfigured ? 'var(--admin-success)' : '#D97706' }}>
+              {mtnDiagnostic?.isConfigured ? 'LIVE_SANDBOX' : 'MTN MoMo: NOT CONFIGURED'}
             </div>
           </div>
 

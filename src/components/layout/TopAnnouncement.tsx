@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Truck, ChevronDown, Globe, Terminal } from 'lucide-react';
+import { IS_CLIENT_MODE } from '../../config/appMode';
 
 interface TopAnnouncementProps {
   onShopDeals?: () => void;
@@ -63,32 +64,36 @@ export const TopAnnouncement: React.FC<TopAnnouncementProps> = ({ onShopDeals, o
           <a href="#help" style={{ opacity: 0.85, transition: 'opacity 0.2s' }}>Help</a>
           <span style={{ opacity: 0.3 }}>·</span>
 
-          {/* Admin Command Center Quick Toggle */}
-          <button
-            onClick={() => {
-              if ((window as any).__toggleAdmin) {
-                (window as any).__toggleAdmin();
-              }
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              backgroundColor: 'rgba(212, 175, 55, 0.2)',
-              border: '1px solid rgba(212, 175, 55, 0.4)',
-              color: 'var(--color-gold)',
-              padding: '2px 9px',
-              borderRadius: '12px',
-              fontSize: '0.72rem',
-              fontWeight: 800,
-              cursor: 'pointer',
-              letterSpacing: '0.03em',
-            }}
-            title="Open FURNITURA Admin Command Center (Ctrl+Shift+A)"
-          >
-            <span>👑 ADMIN DASHBOARD</span>
-          </button>
-          <span style={{ opacity: 0.3 }}>·</span>
+          {/* Admin Command Center Quick Toggle - Hidden in client mode */}
+          {!IS_CLIENT_MODE && (
+            <>
+              <button
+                onClick={() => {
+                  if ((window as any).__toggleAdmin) {
+                    (window as any).__toggleAdmin();
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                  color: 'var(--color-gold)',
+                  padding: '2px 9px',
+                  borderRadius: '12px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  letterSpacing: '0.03em',
+                }}
+                title="Open FURNITURA Admin Command Center (Ctrl+Shift+A)"
+              >
+                <span>👑 ADMIN DASHBOARD</span>
+              </button>
+              <span style={{ opacity: 0.3 }}>·</span>
+            </>
+          )}
 
           {/* Developer Sandbox Panel Trigger */}
           {onOpenSandboxPanel && (

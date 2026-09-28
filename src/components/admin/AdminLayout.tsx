@@ -1,4 +1,5 @@
 import { useAdmin } from '../../context/AdminContext';
+import { AdminLogin } from './AdminLogin';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 import { GlobalSearchModal } from './GlobalSearchModal';
@@ -20,10 +21,37 @@ import { StaffManager } from './StaffManager';
 import { MtnSandboxPage } from './MtnSandboxPage';
 import { SystemSettings } from './SystemSettings';
 import { AuditLogsViewer } from './AuditLogsViewer';
+import { Loader2 } from 'lucide-react';
 import './admin.css';
 
 export function AdminLayout() {
-  const { activeTab, adminToasts, dismissAdminToast } = useAdmin();
+  const { activeTab, adminToasts, dismissAdminToast, isAuthenticated, isLoadingAuth } = useAdmin();
+
+  if (isLoadingAuth) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#110419',
+          color: '#D4AF37',
+          gap: '12px',
+        }}
+      >
+        <Loader2 size={32} className="spin-animation" />
+        <span style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          Verifying Admin Credentials...
+        </span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AdminLogin />;
+  }
 
   const renderActiveTabContent = () => {
     switch (activeTab) {

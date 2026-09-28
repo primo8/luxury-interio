@@ -10,7 +10,7 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
                     ┌────────────────────────┐
                     │  CUSTOMER STOREFRONT   │
                     │    Cloudflare Pages    │
-                    │   (React 19 + Vite)    │
+                    │ (VITE_APP_MODE=client) │
                     └───────────┬────────────┘
                                 │ HTTPS (VITE_API_URL)
                                 ▼
@@ -25,14 +25,13 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
                 │ MONGODB ATLAS  │  │   FIREBASE    │
                 │  Production DB │  │ Authentication │
                 └────────────────┘  └───────────────┘
-
-                    ┌────────────────────────┐
+                                ▲
+                                │ HTTPS (VITE_API_URL)
+                    ┌───────────┴────────────┐
                     │    ADMIN DASHBOARD     │
                     │    Cloudflare Pages    │
-                    └───────────┬────────────┘
-                                │ HTTPS
-                                ▼
-                           Render API
+                    │  (VITE_APP_MODE=admin) │
+                    └────────────────────────┘
 ```
 
 ---
@@ -67,16 +66,17 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
    * Visit [Firebase Console](https://console.firebase.google.com/) and create a project named `furnitura-luxury`.
 2. **Enable Authentication**:
    * Under **Build → Authentication**, enable **Email/Password** and/or **Google Sign-In**.
-3. **Admin Service Account (for Render)**:
+3. **Admin Service Account (for Render Backend)**:
    * Go to **Project Settings → Service Accounts**.
    * Click **Generate new private key** (downloads JSON).
-   * Extract:
+   * Extract for backend:
      * `project_id` → `FIREBASE_PROJECT_ID`
      * `client_email` → `FIREBASE_CLIENT_EMAIL`
      * `private_key` → `FIREBASE_PRIVATE_KEY`
 4. **Web App Credentials (for Cloudflare Pages)**:
    * Under **Project Settings → General → Your apps**, add a Web App.
-   * Copy the public client config (`apiKey`, `authDomain`, `projectId`, etc.).
+   * Copy the browser-safe client config (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, etc.).
+   * *Never put Firebase private key, MongoDB URI, or MTN credentials in frontend variables.*
 
 ---
 
@@ -89,7 +89,7 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
    * **Name**: `furnitura-api`
    * **Runtime**: `Node`
    * **Build Command**: `npm install && npm run build`
-   * **Start Command**: `npm start`
+   * **Start Command**: `node dist-server/server.js` (or `npm start`)
    * **Health Check Path**: `/health`
 3. **Environment Variables**:
    Add the following in the Render Environment tab:
@@ -101,31 +101,47 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
    * `FIREBASE_PRIVATE_KEY`: `<Your Firebase Private Key>`
    * `MTN_ENV`: `sandbox`
    * `MTN_BASE_URL`: `https://sandbox.momodeveloper.mtn.com`
-   * `MTN_COLLECTION_SUBSCRIPTION_KEY`: `<MTN Subscription Key>`
-   * `MTN_API_USER`: `<MTN API User UUID>`
-   * `MTN_API_KEY`: `<MTN API Key>`
+   * `MTN_COLLECTION_SUBSCRIPTION_KEY`: `<MTN Subscription Key - configured later>`
+   * `MTN_API_USER`: `<MTN API User UUID - configured later>`
+   * `MTN_API_KEY`: `<MTN API Key - configured later>`
    * `MTN_TARGET_ENVIRONMENT`: `sandbox`
-   * `MTN_CURRENCY`: `EUR` (or configured provider currency)
-   * `MTN_CALLBACK_URL`: `<Optional Callback URL>`
+   * `MTN_CURRENCY`: `EUR`
    * `CORS_ORIGINS`: `https://furnitura.pages.dev,https://admin-furnitura.pages.dev`
 
 ---
 
-## 4. ⚡ Cloudflare Pages Frontend Deployment
+## 4. ⚡ Frontend Deployment Modes (Cloudflare Pages)
 
-### Storefront Deployment
-1. Go to [Cloudflare Dashboard → Workers & Pages](https://dash.cloudflare.com/).
-2. Click **Create Application → Pages → Connect to Git**.
-3. Select `primo8/luxury-interio` repository.
-4. **Build Settings**:
-   * **Framework Preset**: `Vite`
-   * **Build Command**: `npm run build:frontend` (or `npm run build`)
-   * **Build Output Directory**: `dist`
-5. **Environment Variables**:
-   * `VITE_API_URL`: `https://furnitura-api.onrender.com` (or custom Render API domain)
-   * `VITE_FIREBASE_API_KEY`: `<Firebase API Key>`
-   * `VITE_FIREBASE_AUTH_DOMAIN`: `<Project>.firebaseapp.com`
-   * `VITE_FIREBASE_PROJECT_ID`: `<Project ID>`
+Both modes use the same Render API via `VITE_API_URL`.
+
+### A. Customer Storefront Mode
+* **Deployment URL**: `https://furnitura.pages.dev`
+* **Environment Variables**:
+  ```env
+  VITE_APP_MODE=client
+  VITE_API_URL=https://furnitura-api.onrender.com
+  VITE_FIREBASE_API_KEY=AIzaSy...
+  VITE_FIREBASE_AUTH_DOMAIN=furnitura-luxury.firebaseapp.com
+  VITE_FIREBASE_PROJECT_ID=furnitura-luxury
+  ```
+* **Behavior**:
+  * Shows only the customer storefront.
+  * Admin dashboard navigation, admin buttons, and shortcut triggers are hidden.
+
+### B. Admin Command Center Mode
+* **Deployment URL**: `https://admin-furnitura.pages.dev`
+* **Environment Variables**:
+  ```env
+  VITE_APP_MODE=admin
+  VITE_API_URL=https://furnitura-api.onrender.com
+  VITE_FIREBASE_API_KEY=AIzaSy...
+  VITE_FIREBASE_AUTH_DOMAIN=furnitura-luxury.firebaseapp.com
+  VITE_FIREBASE_PROJECT_ID=furnitura-luxury
+  ```
+* **Behavior**:
+  * Shows the Admin Command Center.
+  * Requires Firebase authentication and enforces server-side RBAC.
+  * Does not expose public storefront as primary application.
 
 ---
 
@@ -134,5 +150,4 @@ This guide details the step-by-step setup and live deployment of the **FURNITURA
 * **Root Status**: `GET https://furnitura-api.onrender.com/`
 * **Health Check**: `GET https://furnitura-api.onrender.com/health`
 * **Database Health**: `GET https://furnitura-api.onrender.com/health/database`
-* **MoMo Diagnostics**: `GET https://furnitura-api.onrender.com/api/payments/mtn/config-status`
-
+* **MTN MoMo Diagnostics**: `GET https://furnitura-api.onrender.com/api/payments/mtn/config-status`

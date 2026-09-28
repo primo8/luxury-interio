@@ -261,10 +261,10 @@ export const MtnSandboxTestPanel: React.FC<MtnSandboxTestPanelProps> = ({ isOpen
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.94rem', fontWeight: 700, color: diagnostic?.isConfigured ? '#2a9d8f' : '#e0a96d' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: diagnostic?.isConfigured ? '#2a9d8f' : '#e0a96d' }} />
-                <span>{diagnostic?.mode === 'LIVE_SANDBOX' ? 'Live MTN Sandbox' : 'Simulated Dev Sandbox'}</span>
+                <span>{diagnostic?.isConfigured ? 'Live MTN Sandbox' : 'MTN MoMo: NOT CONFIGURED'}</span>
               </div>
               <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>
-                {diagnostic?.isConfigured ? 'Connected with subscription keys' : 'Sandbox credentials unset (Simulating transitions)'}
+                {diagnostic?.isConfigured ? 'Connected with subscription keys' : 'MTN credentials not configured on server'}
               </div>
             </div>
 
