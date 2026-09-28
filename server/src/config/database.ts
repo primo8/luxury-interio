@@ -30,9 +30,9 @@ export async function connectDatabase(): Promise<boolean> {
     const conn = await mongoose.connect(uri, {
       maxPoolSize: 25,
       minPoolSize: 2,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
+      connectTimeoutMS: 15000,
     });
 
     isConnected = true;

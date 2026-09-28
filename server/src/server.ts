@@ -40,7 +40,7 @@ app.use(
           origin.startsWith('http://127.0.0.1:') ||
           configuredOrigins.includes(origin)
         ) {
-          return callback(null, true);
+          return callback(null, true); 
         }
       }
 
