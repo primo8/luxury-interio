@@ -14,7 +14,7 @@ import { SettingsModel } from '../models/Settings';
 import { InventoryAdjustmentModel } from '../models/Inventory';
 import { isDatabaseConnected } from '../config/database';
 import { isFirebaseAuthActive } from '../config/firebase';
-import type { AuthenticatedRequest } from '../middleware/auth';
+import { DEFAULT_ROLE_PERMISSIONS, type AuthenticatedRequest } from '../middleware/auth';
 import type {
   StaffRole,
   AdminPermission,
@@ -1460,10 +1460,246 @@ export async function markAllAdminNotificationsRead(req: Request, res: Response)
 
 export async function getAdminStaff(req: Request, res: Response) {
   try {
-    const staffList = Array.from(db.staff.values());
+    let staffList: any[] = [];
+    if (isDatabaseConnected()) {
+      staffList = await StaffModel.find().sort({ createdAt: -1 }).lean();
+    } else {
+      staffList = Array.from(db.staff.values());
+    }
     return res.status(200).json({ success: true, staff: staffList });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: 'Failed to fetch staff list.' });
+  }
+}
+
+export async function inviteAdminStaff(req: Request, res: Response) {
+  const authReq = req as AuthenticatedRequest;
+  try {
+    const { email, name, role, department, phone } = req.body;
+
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ success: false, message: 'Valid email address is required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanRole = (role || 'SUPPORT_AGENT').toUpperCase() as StaffRole;
+    const cleanName = (name || cleanEmail.split('@')[0] || 'Staff Member').trim();
+    const cleanDept = (department || 'OPERATIONS').trim();
+
+    // Determine default permissions for role
+    const permissions = DEFAULT_ROLE_PERMISSIONS[cleanRole] || ['orders.read', 'customers.read'];
+    const staffId = `staff-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+    let newStaff: any = null;
+
+    if (isDatabaseConnected()) {
+      newStaff = await StaffModel.findOneAndUpdate(
+        { email: cleanEmail },
+        {
+          $set: {
+            name: cleanName,
+            email: cleanEmail,
+            role: cleanRole,
+            permissions,
+            department: cleanDept,
+            phone: phone || '',
+            isActive: true,
+            updatedAt: new Date(),
+          },
+          $setOnInsert: {
+            id: staffId,
+            createdAt: new Date(),
+          },
+        },
+        { upsert: true, returnDocument: 'after' }
+      );
+    }
+
+    const staffObj = {
+      id: newStaff?.id || staffId,
+      name: cleanName,
+      email: cleanEmail,
+      role: cleanRole,
+      permissions,
+      department: cleanDept,
+      phone: phone || '',
+      active: true,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    db.staff.set(staffObj.id, staffObj as any);
+
+    // Audit Log
+    db.logAudit({
+      actorId: authReq.user?.uid || 'super-admin',
+      actorName: authReq.user?.name || 'Administrator',
+      actorRole: (authReq.user?.role as any) || 'SUPER_ADMIN',
+      action: 'INVITE_STAFF',
+      resource: 'STAFF',
+      resourceId: staffObj.id,
+      details: `Invited and authorized ${cleanName} (${cleanEmail}) as ${cleanRole} in ${cleanDept}`,
+      ipAddress: req.ip || '127.0.0.1',
+    });
+
+    // Admin Notification
+    db.addNotification({
+      title: 'Staff Access Authorized',
+      message: `${cleanName} (${cleanEmail}) was granted ${cleanRole} access to FURNITURA Admin.`,
+      type: 'system',
+      severity: 'success',
+      link: '/admin/staff',
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `Successfully authorized and invited ${cleanName} (${cleanEmail}) as ${cleanRole}.`,
+      staff: staffObj,
+    });
+  } catch (err: any) {
+    console.error('Invite staff error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to invite staff member.' });
+  }
+}
+
+export async function deleteAdminStaff(req: Request, res: Response) {
+  const authReq = req as AuthenticatedRequest;
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Staff ID is required.' });
+    }
+
+    // Find staff record
+    let staffDoc: any = null;
+    if (isDatabaseConnected()) {
+      staffDoc = await StaffModel.findOne({
+        $or: [{ id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
+      });
+    } else {
+      staffDoc = db.staff.get(id);
+    }
+
+    if (!staffDoc) {
+      return res.status(404).json({ success: false, message: 'Staff member not found.' });
+    }
+
+    // Prevent self-deletion
+    if (
+      authReq.user?.uid === staffDoc.id ||
+      authReq.user?.uid === staffDoc.firebaseUid ||
+      authReq.user?.email?.toLowerCase() === staffDoc.email?.toLowerCase()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete your own active administrator account.',
+      });
+    }
+
+    const staffEmail = staffDoc.email;
+    const staffName = staffDoc.name;
+
+    // Delete from MongoDB and in-memory cache
+    if (isDatabaseConnected()) {
+      await StaffModel.deleteOne({ _id: staffDoc._id });
+    }
+    db.staff.delete(staffDoc.id);
+
+    // Audit Log
+    db.logAudit({
+      actorId: authReq.user?.uid || 'super-admin',
+      actorName: authReq.user?.name || 'Administrator',
+      actorRole: (authReq.user?.role as any) || 'SUPER_ADMIN',
+      action: 'REVOKE_STAFF_ACCESS',
+      resource: 'STAFF',
+      resourceId: staffDoc.id,
+      details: `Revoked access and deleted staff account for ${staffName} (${staffEmail})`,
+      ipAddress: req.ip || '127.0.0.1',
+    });
+
+    // Admin Notification
+    db.addNotification({
+      title: 'Staff Access Revoked',
+      message: `Access for ${staffName} (${staffEmail}) was deleted. User cannot sign in again.`,
+      type: 'system',
+      severity: 'warning',
+      link: '/admin/staff',
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Staff access for ${staffName} (${staffEmail}) has been deleted and login access permanently revoked.`,
+    });
+  } catch (err: any) {
+    console.error('Delete staff error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to delete staff member.' });
+  }
+}
+
+export async function toggleAdminStaffStatus(req: Request, res: Response) {
+  const authReq = req as AuthenticatedRequest;
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ success: false, message: 'isActive boolean flag is required.' });
+    }
+
+    let staffDoc: any = null;
+    if (isDatabaseConnected()) {
+      staffDoc = await StaffModel.findOne({
+        $or: [{ id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
+      });
+    } else {
+      staffDoc = db.staff.get(id);
+    }
+
+    if (!staffDoc) {
+      return res.status(404).json({ success: false, message: 'Staff member not found.' });
+    }
+
+    // Prevent self-deactivation
+    if (
+      !isActive &&
+      (authReq.user?.uid === staffDoc.id ||
+        authReq.user?.uid === staffDoc.firebaseUid ||
+        authReq.user?.email?.toLowerCase() === staffDoc.email?.toLowerCase())
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot deactivate your own active administrator account.',
+      });
+    }
+
+    if (isDatabaseConnected()) {
+      await StaffModel.updateOne({ _id: staffDoc._id }, { isActive, updatedAt: new Date() });
+    }
+
+    if (db.staff.has(staffDoc.id)) {
+      const existing = db.staff.get(staffDoc.id)!;
+      existing.active = isActive;
+      (existing as any).isActive = isActive;
+    }
+
+    db.logAudit({
+      actorId: authReq.user?.uid || 'super-admin',
+      actorName: authReq.user?.name || 'Administrator',
+      actorRole: (authReq.user?.role as any) || 'SUPER_ADMIN',
+      action: isActive ? 'ACTIVATE_STAFF' : 'DEACTIVATE_STAFF',
+      resource: 'STAFF',
+      resourceId: staffDoc.id,
+      details: `${isActive ? 'Activated' : 'Deactivated'} staff access for ${staffDoc.name} (${staffDoc.email})`,
+      ipAddress: req.ip || '127.0.0.1',
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Staff member ${staffDoc.name} is now ${isActive ? 'active' : 'deactivated'}.`,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: 'Failed to update staff status.' });
   }
 }
 

@@ -285,7 +285,27 @@ export async function syncDatabaseWithMongo(): Promise<void> {
         }
       }
 
-      // 6. Load Staff
+      // 6. Ensure Super Admins from initial staff exist and load all active staff
+      for (const s of Array.from(db.staff.values())) {
+        if (s.role === 'SUPER_ADMIN') {
+          await StaffModel.findOneAndUpdate(
+            { email: s.email.toLowerCase() },
+            {
+              $setOnInsert: {
+                id: s.id,
+                name: s.name,
+                email: s.email.toLowerCase(),
+                role: s.role,
+                permissions: s.permissions,
+                department: s.department || 'EXECUTIVE',
+                isActive: true,
+              },
+            },
+            { upsert: true, new: true }
+          );
+        }
+      }
+
       const mongoStaff = await StaffModel.find({ isActive: true }).lean();
       if (mongoStaff.length > 0) {
         for (const s of mongoStaff as any[]) {

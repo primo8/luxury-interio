@@ -209,6 +209,8 @@ export async function authenticateToken(
   }
 }
 
+export { DEFAULT_ROLE_PERMISSIONS };
+
 export function requirePermission(permission: string) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user || !req.user.isStaff) {
@@ -220,8 +222,9 @@ export function requirePermission(permission: string) {
 
     const userPerms = req.user.permissions || [];
     const isSuperAdmin = req.user.role === 'SUPER_ADMIN' || userPerms.includes('*');
+    const altPermission = permission.includes('.') ? permission.replace('.', ':') : permission.replace(':', '.');
 
-    if (isSuperAdmin || userPerms.includes(permission)) {
+    if (isSuperAdmin || userPerms.includes(permission) || userPerms.includes(altPermission)) {
       return next();
     }
 

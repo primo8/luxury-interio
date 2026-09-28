@@ -232,6 +232,32 @@ export async function fetchAdminStaff() {
   return apiFetch('/staff');
 }
 
+export async function inviteAdminStaff(data: {
+  email: string;
+  name: string;
+  role: string;
+  department?: string;
+  phone?: string;
+}) {
+  return apiFetch('/staff/invite', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAdminStaff(id: string) {
+  return apiFetch(`/staff/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function toggleAdminStaffStatus(id: string, isActive: boolean) {
+  return apiFetch(`/staff/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isActive }),
+  });
+}
+
 export async function fetchAdminAuditLogs(params: Record<string, string> = {}) {
   const query = new URLSearchParams(params).toString();
   return apiFetch(`/audit-logs${query ? `?${query}` : ''}`);

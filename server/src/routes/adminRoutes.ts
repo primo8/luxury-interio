@@ -35,6 +35,9 @@ import {
   markAdminNotificationRead,
   markAllAdminNotificationsRead,
   getAdminStaff,
+  inviteAdminStaff,
+  deleteAdminStaff,
+  toggleAdminStaffStatus,
   getAdminAuditLogs,
   getAdminSettings,
   updateAdminSettings,
@@ -115,6 +118,9 @@ router.post('/notifications/read-all', requirePermission('notifications.manage')
 
 // Staff & Roles
 router.get('/staff', requirePermission('staff.read'), getAdminStaff);
+router.post('/staff/invite', requirePermission('staff.manage'), inviteAdminStaff);
+router.delete('/staff/:id', requirePermission('staff.manage'), deleteAdminStaff);
+router.patch('/staff/:id/status', requirePermission('staff.manage'), toggleAdminStaffStatus);
 
 // Audit Logs
 router.get('/audit-logs', requirePermission('audit.read'), getAdminAuditLogs);

@@ -22,6 +22,7 @@
     "start": "node dist-server/server.js",
     "db:seed": "tsx server/src/scripts/seed.ts",
     "db:migrate": "tsx server/src/scripts/migrate.ts",
+    "staff:authorize": "tsx server/src/scripts/authorizeAdmin.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },
