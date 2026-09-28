@@ -13,6 +13,8 @@ import { CMSModel } from '../models/CMS';
 import { SettingsModel } from '../models/Settings';
 import { InventoryAdjustmentModel } from '../models/Inventory';
 import { isDatabaseConnected } from '../config/database';
+import { isFirebaseAuthActive } from '../config/firebase';
+import type { AuthenticatedRequest } from '../middleware/auth';
 import type {
   StaffRole,
   AdminPermission,
@@ -35,23 +37,40 @@ export async function adminLogin(req: Request, res: Response) {
       return res.status(400).json({ success: false, message: 'Email and password required.' });
     }
 
-    const staffUser = Array.from(db.staff.values()).find(
-      (s) => s.email.toLowerCase() === email.trim().toLowerCase()
-    );
+    // In production mode, direct unauthenticated password logins are disabled in favor of Firebase Enterprise Auth
+    if (process.env.NODE_ENV === 'production' && !isFirebaseAuthActive()) {
+      return res.status(401).json({
+        success: false,
+        message: 'Direct password login is disabled in production. Authenticate via Firebase.',
+      });
+    }
 
-    if (!staffUser || !staffUser.active) {
+    let staffUser: any = null;
+    if (isDatabaseConnected()) {
+      staffUser = await StaffModel.findOne({
+        email: email.trim().toLowerCase(),
+        isActive: true,
+      }).lean();
+    } else {
+      staffUser = Array.from(db.staff.values()).find(
+        (s) => s.email.toLowerCase() === email.trim().toLowerCase() && (s.isActive ?? s.active) === true
+      );
+    }
+
+    if (!staffUser) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials or account deactivated.',
       });
     }
 
-    // In production, bcrypt is used; for this environment, demo password or standard credential matches
-    staffUser.lastLoginAt = new Date().toISOString();
-    db.staff.set(staffUser.id, staffUser);
+    // Record login audit
+    if (isDatabaseConnected()) {
+      await StaffModel.updateOne({ _id: (staffUser as any)._id }, { lastLoginAt: new Date() });
+    }
 
     db.logAudit({
-      actorId: staffUser.id,
+      actorId: staffUser.id || 'staff',
       actorName: staffUser.name,
       actorRole: staffUser.role,
       action: 'LOGIN',
@@ -60,7 +79,7 @@ export async function adminLogin(req: Request, res: Response) {
       ipAddress: req.ip || '127.0.0.1',
     });
 
-    const token = `furn-session-${staffUser.id}-${Date.now()}`;
+    const token = `furn-session-${staffUser.id || 'staff'}-${Date.now()}`;
 
     return res.status(200).json({
       success: true,
@@ -81,18 +100,37 @@ export async function adminLogin(req: Request, res: Response) {
 }
 
 export async function getAdminMe(req: Request, res: Response) {
-  // Default to Super Admin if session token or fallback
-  const user = Array.from(db.staff.values())[0];
+  const authReq = req as AuthenticatedRequest;
+  if (!authReq.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized: Authentication required.',
+    });
+  }
+
+  // Lookup full details from database or memoryDb if available
+  let staffDetails: any = null;
+  if (isDatabaseConnected()) {
+    staffDetails = await StaffModel.findOne({
+      $or: [{ firebaseUid: authReq.user.uid }, { email: authReq.user.email.toLowerCase() }],
+      isActive: true,
+    }).lean();
+  } else {
+    staffDetails = Array.from(db.staff.values()).find(
+      (s) => s.email.toLowerCase() === authReq.user?.email.toLowerCase()
+    );
+  }
+
   return res.status(200).json({
     success: true,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar,
-      permissions: user.permissions,
-      phone: user.phone,
+      id: staffDetails?.id || authReq.user.uid,
+      name: staffDetails?.name || authReq.user.name || 'Staff Member',
+      email: authReq.user.email,
+      role: authReq.user.role,
+      avatar: staffDetails?.avatar,
+      permissions: authReq.user.permissions,
+      phone: staffDetails?.phone,
     },
   });
 }

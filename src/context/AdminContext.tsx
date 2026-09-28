@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, isClientFirebaseConfigured } from '../config/firebase';
 import { IS_ADMIN_MODE, IS_CLIENT_MODE } from '../config/appMode';
 import { fetchAdminNotifications, fetchAdminDashboard } from '../utils/adminApi';
@@ -49,6 +49,7 @@ interface AdminContextType {
   isAuthenticated: boolean;
   isLoadingAuth: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithGoogle: () => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   unreadNotificationsCount: number;
   selectedOrderId: string | null;
@@ -271,6 +272,52 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Google Sign-In handler
+  const loginWithGoogle = async (): Promise<{ success: boolean; message?: string }> => {
+    try {
+      if (!isClientFirebaseConfigured || !auth) {
+        return {
+          success: false,
+          message: 'Google Sign-In is unavailable because Firebase is not configured in this environment.',
+        };
+      }
+
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const userCredential = await signInWithPopup(auth, provider);
+      const token = await userCredential.user.getIdToken();
+
+      localStorage.setItem('furnitura_admin_token', token);
+      const isAuthorized = await verifyServerRbac(token);
+
+      if (!isAuthorized) {
+        // Successfully authenticated by Google, but not registered/active in StaffModel
+        await signOut(auth);
+        localStorage.removeItem('furnitura_admin_token');
+        sessionStorage.removeItem('furnitura_admin_token');
+        setIsAuthenticated(false);
+        return {
+          success: false,
+          message:
+            'Access Denied: Your Google account was authenticated, but is not authorized as an active staff member in FURNITURA.',
+        };
+      }
+
+      setIsAuthenticated(true);
+      showAdminToast('Signed in successfully with Google', 'success');
+      return { success: true };
+    } catch (err: any) {
+      console.error('[Google Sign-In Failed]', err);
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return { success: false, message: 'Google sign-in popup was closed before completing.' };
+      }
+      return {
+        success: false,
+        message: err.message || 'Google authentication failed. Please try again.',
+      };
+    }
+  };
+
   // Logout handler
   const logout = async () => {
     try {
@@ -369,6 +416,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         isLoadingAuth,
         login,
+        loginWithGoogle,
         logout,
         unreadNotificationsCount,
         selectedOrderId,

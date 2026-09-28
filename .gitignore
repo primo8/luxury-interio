@@ -26,3 +26,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Security & Private Credentials
+*.pem
+*.key
+*serviceAccount*.json
+*firebase-adminsdk*.json

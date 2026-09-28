@@ -54,7 +54,7 @@ router.use(authenticateToken);
 router.get('/auth/me', getAdminMe);
 
 // Dashboard
-router.get('/dashboard', getDashboardOverview);
+router.get('/dashboard', requirePermission('orders.read'), getDashboardOverview);
 
 // Orders
 router.get('/orders', requirePermission('orders.read'), getAdminOrders);
@@ -124,9 +124,9 @@ router.get('/settings', requirePermission('settings.manage'), getAdminSettings);
 router.put('/settings', requirePermission('settings.manage'), updateAdminSettings);
 
 // Search
-router.get('/search', globalAdminSearch);
+router.get('/search', requirePermission('orders.read'), globalAdminSearch);
 
 // CSV Export
-router.get('/export/:resource', exportAdminResource);
+router.get('/export/:resource', requirePermission('orders.read'), exportAdminResource);
 
 export default router;
