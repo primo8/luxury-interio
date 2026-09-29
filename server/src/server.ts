@@ -8,6 +8,7 @@ import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import storeRoutes from './routes/storeRoutes';
 import userRoutes from './routes/userRoutes';
+import { startKeepAliveService, stopKeepAliveService } from './services/keepAliveService';
 
 const app = express();
 
@@ -158,11 +159,15 @@ const server = app.listen(PORT, HOST, () => {
   console.log(`🗄️ Database: ${isDatabaseConnected() ? 'MongoDB Atlas' : 'In-Memory State'}`);
   console.log(`🔐 Firebase Admin: ${initFirebaseAdmin() ? 'Active' : 'Local Fallback'}`);
   console.log(`=========================================`);
+
+  // Start automated keep-alive self-ping service to prevent Render from sleeping
+  startKeepAliveService();
 });
 
 // Graceful termination handling for Render container lifecycle
 const gracefulShutdown = async (signal: string) => {
   console.log(`\n🛑 [Shutdown] Received ${signal}. Closing HTTP server and database connections...`);
+  stopKeepAliveService();
   server.close(async () => {
     await disconnectDatabase();
     console.log('✅ [Shutdown] Clean shutdown completed. Process exiting.');
