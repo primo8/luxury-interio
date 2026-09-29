@@ -183,6 +183,14 @@ export async function authenticateToken(
       });
     }
 
+    // Link firebaseUid to StaffModel if not linked yet
+    if (isDatabaseConnected() && staffRecord && (!staffRecord.firebaseUid || staffRecord.firebaseUid !== userUid)) {
+      await StaffModel.updateOne(
+        { _id: staffRecord._id },
+        { $set: { firebaseUid: userUid, lastLoginAt: new Date() } }
+      ).catch((err) => console.warn('⚠️ [Auth Middleware] Could not update staff firebaseUid:', err));
+    }
+
     // 6. Resolve authoritative role and permissions strictly from server-side database
     const role = staffRecord.role || 'SUPPORT_AGENT';
     const permissions =
