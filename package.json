@@ -14,7 +14,7 @@
     "build:client": "tsc -b && vite build --mode client --outDir dist",
     "build:admin": "tsc -b && vite build --mode admin --outDir dist-admin",
     "build:all": "npm run build:client && npm run build:admin && npm run build:server",
-    "build": "npm run build:server",
+    "build": "npm run build:all",
     "deploy:store": "wrangler deploy --config wrangler.jsonc",
     "deploy:client": "wrangler deploy --config wrangler.jsonc",
     "deploy:admin": "wrangler deploy --config wrangler.admin.jsonc",
