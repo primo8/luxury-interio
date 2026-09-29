@@ -1,4 +1,5 @@
 import type { Product } from '../types';
+import { getApiOrigin } from '../config/api';
 
 export interface AdminApiResponse {
   success: boolean;
@@ -7,8 +8,7 @@ export interface AdminApiResponse {
   [key: string]: any;
 }
 
-const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-const API_BASE = `${API_ORIGIN}/api/admin`;
+const getApiBase = () => `${getApiOrigin()}/api/admin`;
 
 // Helper fetch wrapper
 async function apiFetch(
@@ -18,7 +18,7 @@ async function apiFetch(
   try {
     const token = localStorage.getItem('furnitura_admin_token') || sessionStorage.getItem('furnitura_admin_token');
 
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(`${getApiBase()}${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -280,5 +280,5 @@ export async function globalAdminSearch(q: string) {
 }
 
 export function getExportDownloadUrl(resource: string): string {
-  return `${API_BASE}/export/${resource}`;
+  return `${getApiBase()}/export/${resource}`;
 }

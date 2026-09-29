@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOu
 import { auth, isClientFirebaseConfigured } from '../config/firebase';
 import { IS_ADMIN_MODE, IS_CLIENT_MODE } from '../config/appMode';
 import { fetchAdminNotifications, fetchAdminDashboard } from '../utils/adminApi';
+import { getApiOrigin } from '../config/api';
 
 export type AdminTab =
   | 'dashboard'
@@ -144,8 +145,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // Verify server-side RBAC and fetch admin profile
   const verifyServerRbac = useCallback(async (token: string): Promise<{ success: boolean; message?: string }> => {
+    const apiOrigin = getApiOrigin();
     try {
-      const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
       const res = await fetch(`${apiOrigin}/api/admin/auth/me`, {
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +182,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       };
     } catch (err: any) {
       console.error('[AdminContext] RBAC verification error:', err);
-      const apiOrigin = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       return {
         success: false,
         message: `Backend Connection Error: Unable to reach backend API at '${apiOrigin}'. Ensure backend is deployed and VITE_API_URL is configured.`,
@@ -269,7 +269,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             console.warn(
               '[Firebase Auth] Email/Password provider not enabled in Firebase Console. Falling back to direct staff auth API...'
             );
-            const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+            const apiOrigin = getApiOrigin();
             const res = await fetch(`${apiOrigin}/api/admin/auth/login`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -289,7 +289,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         // Direct RBAC server login fallback (for dev or direct staff auth)
-        const apiOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+        const apiOrigin = getApiOrigin();
         const res = await fetch(`${apiOrigin}/api/admin/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

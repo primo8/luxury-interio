@@ -11,6 +11,7 @@ import {
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { auth, isClientFirebaseConfigured } from '../config/firebase';
+import { getApiOrigin } from '../config/api';
 
 export interface CustomerAddress {
   id: string;
@@ -123,7 +124,7 @@ interface UserAuthContextType {
 
 const UserAuthContext = createContext<UserAuthContextType | undefined>(undefined);
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const getApiBase = () => getApiOrigin();
 
 export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
@@ -138,7 +139,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Sync user with backend MongoDB Atlas
   const syncWithMongoDB = useCallback(async (token: string, user: FirebaseUser, extraData?: any) => {
     try {
-      const res = await fetch(`${API_URL}/api/user/sync`, {
+      const res = await fetch(`${getApiBase()}/api/user/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +170,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!idToken) return;
     setOrdersLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/user/orders`, {
+      const res = await fetch(`${getApiBase()}/api/user/orders`, {
         headers: { Authorization: `Bearer ${idToken}` },
       });
       if (res.ok) {
@@ -342,7 +343,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }) => {
     if (!idToken) return { success: false, message: 'Authentication required.' };
     try {
-      const res = await fetch(`${API_URL}/api/user/profile`, {
+      const res = await fetch(`${getApiBase()}/api/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -365,7 +366,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addAddress = async (addr: Omit<CustomerAddress, 'id'>) => {
     if (!idToken) return { success: false, message: 'Authentication required.' };
     try {
-      const res = await fetch(`${API_URL}/api/user/addresses`, {
+      const res = await fetch(`${getApiBase()}/api/user/addresses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -388,7 +389,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const deleteAddress = async (addressId: string) => {
     if (!idToken) return { success: false, message: 'Authentication required.' };
     try {
-      const res = await fetch(`${API_URL}/api/user/addresses/${addressId}`, {
+      const res = await fetch(`${getApiBase()}/api/user/addresses/${addressId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${idToken}` },
       });
@@ -407,7 +408,7 @@ export const UserAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const syncWishlistWithMongo = async (wishlistIds: string[]) => {
     if (!idToken) return;
     try {
-      await fetch(`${API_URL}/api/user/wishlist`, {
+      await fetch(`${getApiBase()}/api/user/wishlist`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
