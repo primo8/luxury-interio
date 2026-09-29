@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AdminProvider, useAdmin } from './context/AdminContext';
+import { UserAuthProvider } from './context/UserAuthContext';
+import { CustomerAuthModal } from './components/auth/CustomerAuthModal';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { TopAnnouncement } from './components/layout/TopAnnouncement';
 import { Header } from './components/layout/Header';
@@ -264,6 +266,9 @@ export function AppContent() {
         onClose={() => setIsSandboxTestOpen(false)}
       />
 
+      {/* Customer Account, Auth & MongoDB Profile Modal */}
+      <CustomerAuthModal />
+
       {/* Floating Luxury Toasts */}
       <ToastContainer
         toasts={toasts}
@@ -277,11 +282,13 @@ export function AppContent() {
 export default function App() {
   return (
     <AdminProvider>
-      <WishlistProvider>
-        <CartProvider>
-          <AppContent />
-        </CartProvider>
-      </WishlistProvider>
+      <UserAuthProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </WishlistProvider>
+      </UserAuthProvider>
     </AdminProvider>
   );
 }

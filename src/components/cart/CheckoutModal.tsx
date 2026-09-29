@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useUserAuth } from '../../context/UserAuthContext';
 import type { CustomerDetails, DirectBuyItem, PaymentDiagnostic } from '../../types';
 import {
   X,
@@ -68,6 +69,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const shippingFee = subtotal >= 999 || itemsToCheckout.length === 0 ? 0 : 49;
   const total = Math.max(0, subtotal - discountAmount + shippingFee);
 
+  const { customer: authCustomer } = useUserAuth();
+
   // Stepper state: 'customer' | 'delivery' | 'payment'
   const [step, setStep] = useState<'customer' | 'delivery' | 'payment'>('customer');
 
@@ -76,6 +79,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     fullName: '',
     email: '',
     phone: '',
+    firebaseUid: undefined,
     province: 'Kigali City',
     district: 'Gasabo',
     sector: 'Kacyiru',
@@ -85,6 +89,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     paymentMethod: 'momo',
     notes: '',
   });
+
+  // Auto-fill from authenticated MongoDB customer profile
+  useEffect(() => {
+    if (authCustomer && isOpen) {
+      setCustomer((prev) => ({
+        ...prev,
+        fullName: prev.fullName || authCustomer.fullName || '',
+        email: prev.email || authCustomer.email || '',
+        phone: prev.phone || authCustomer.phone || '',
+        firebaseUid: authCustomer.firebaseUid,
+        address: prev.address || authCustomer.address || (authCustomer.addresses && authCustomer.addresses[0]?.streetAddress) || '',
+        province: prev.province || authCustomer.province || (authCustomer.addresses && authCustomer.addresses[0]?.province) || 'Kigali City',
+        district: prev.district || authCustomer.district || (authCustomer.addresses && authCustomer.addresses[0]?.district) || 'Gasabo',
+      }));
+      if (authCustomer.phone && !momoPhone) {
+        setMomoPhone(authCustomer.phone);
+      }
+    }
+  }, [authCustomer, isOpen]);
 
   // MTN Phone Number
   const [momoPhone, setMomoPhone] = useState('');

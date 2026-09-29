@@ -301,7 +301,7 @@ export async function syncDatabaseWithMongo(): Promise<void> {
                 isActive: true,
               },
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
           );
         }
       }

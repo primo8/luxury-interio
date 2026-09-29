@@ -86,6 +86,7 @@ export interface CustomerDetails {
   fullName: string;
   email: string;
   phone: string;
+  firebaseUid?: string;
   province?: string;
   district?: string;
   sector?: string;

@@ -7,6 +7,7 @@ import { syncDatabaseWithMongo } from './db/sync';
 import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import storeRoutes from './routes/storeRoutes';
+import userRoutes from './routes/userRoutes';
 
 const app = express();
 
@@ -126,6 +127,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 // 3. Mount Business API Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/store', storeRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/payments/mtn', paymentRoutes);
 
 // Safe 404 handler

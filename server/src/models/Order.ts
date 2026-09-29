@@ -25,6 +25,7 @@ export interface IOrderDocument {
   id: string;
   orderNumber: string;
   customerId?: string;
+  firebaseUid?: string;
   customerName: string;
   customerPhone: string;
   customerEmail: string;
@@ -95,6 +96,7 @@ const OrderSchema = new Schema<IOrderDocument>(
     id: { type: String, required: true, unique: true, index: true },
     orderNumber: { type: String, required: true, unique: true, index: true, uppercase: true },
     customerId: { type: String, index: true },
+    firebaseUid: { type: String, index: true, sparse: true },
     customerName: { type: String, required: true },
     customerPhone: { type: String, required: true, index: true },
     customerEmail: { type: String, required: true, index: true },

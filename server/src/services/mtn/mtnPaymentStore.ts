@@ -32,7 +32,7 @@ export const paymentStore = {
             },
           },
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       ).catch((err: any) => console.error('⚠️ [PaymentStore] MongoDB save failed:', err.message));
     }
 

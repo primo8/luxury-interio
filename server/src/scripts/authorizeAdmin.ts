@@ -65,7 +65,7 @@ async function authorizeAdmin() {
           createdAt: new Date(),
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     console.log(`✅ [Authorize Admin] Successfully authorized staff record:`);

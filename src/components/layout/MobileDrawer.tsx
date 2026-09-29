@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, ChevronRight, Sparkles, Phone, MapPin } from 'lucide-react';
+import { X, ChevronRight, Sparkles, Phone, MapPin, User } from 'lucide-react';
 import { CATEGORIES } from '../../data/categories';
+import { useUserAuth } from '../../context/UserAuthContext';
 import type { RoomType } from '../../types';
 
 interface MobileDrawerProps {
@@ -16,6 +17,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onSelectRoom,
   onSelectOffers,
 }) => {
+  const { customer, openAuthModal } = useUserAuth();
   if (!isOpen) return null;
 
   return (
@@ -70,6 +72,56 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
             aria-label="Close menu"
           >
             <X size={18} />
+          </button>
+        </div>
+
+        {/* User Account Quick Card */}
+        <div style={{ padding: '14px 20px', backgroundColor: '#f9f6fa', borderBottom: '1px solid #ede4f2' }}>
+          <button
+            onClick={() => {
+              openAuthModal();
+              onClose();
+            }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: '#ffffff',
+              border: '1px solid rgba(59,24,79,0.12)',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-plum-900)',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                border: '1px solid var(--color-gold)',
+                flexShrink: 0,
+              }}
+            >
+              {customer ? (customer.fullName || 'C')[0].toUpperCase() : <User size={16} />}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--color-plum-950)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {customer ? customer.fullName : 'Sign In / Register'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                {customer ? `${customer.totalOrders || 0} Orders · MongoDB Synced` : 'Access Orders & VIP Benefits'}
+              </div>
+            </div>
+            <ChevronRight size={16} color="var(--color-text-light)" />
           </button>
         </div>
 

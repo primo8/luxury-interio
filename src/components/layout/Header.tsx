@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, User, Heart, ShoppingBag, Menu, X, ArrowRight, Clock, Compass } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useUserAuth } from '../../context/UserAuthContext';
 import { PRODUCTS } from '../../data/products';
 import { IS_CLIENT_MODE } from '../../config/appMode';
 import type { Product, RoomType } from '../../types';
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { openCart, totalItemsCount, total } = useCart();
   const { openWishlist, totalWishlistCount } = useWishlist();
+  const { customer, openAuthModal } = useUserAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -421,30 +423,62 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Account */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} className="hidden-mobile">
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                backgroundColor: '#f6f0f9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-plum-900)',
-              }}
-            >
-              <User size={18} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.68rem', color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Client
+          <button
+            onClick={() => openAuthModal()}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              background: 'transparent',
+              border: 'none',
+              padding: '4px 8px',
+              borderRadius: '24px',
+              transition: 'background-color 0.15s ease',
+            }}
+            className="hidden-mobile"
+            title={customer ? `Signed in as ${customer.fullName}` : 'Sign in / Client Portal'}
+          >
+            {customer?.photoURL ? (
+              <img
+                src={customer.photoURL}
+                alt={customer.fullName}
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid var(--color-gold)',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  backgroundColor: customer ? 'var(--color-plum-900)' : '#f6f0f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: customer ? '#ffffff' : 'var(--color-plum-900)',
+                  fontWeight: 700,
+                  fontSize: customer ? '0.86rem' : 'initial',
+                  border: customer ? '2px solid var(--color-gold)' : 'none',
+                }}
+              >
+                {customer ? (customer.fullName || 'C')[0].toUpperCase() : <User size={18} />}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '0.68rem', color: customer ? 'var(--color-gold)' : 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>
+                {customer ? (customer.status === 'VIP' ? 'VIP Client' : 'My Account') : 'Client'}
               </span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-plum-950)' }}>
-                Account
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-plum-950)', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {customer ? customer.fullName.split(' ')[0] : 'Sign In'}
               </span>
             </div>
-          </div>
+          </button>
 
           {/* Wishlist Button with Badge */}
           <button

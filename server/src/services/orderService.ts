@@ -223,6 +223,7 @@ export function createServerOrder(data: {
       {
         id: order.id,
         orderNumber: order.orderNumber,
+        firebaseUid: (order as any).firebaseUid || (order.customer as any)?.firebaseUid,
         customerName: order.customer.fullName,
         customerEmail: order.customer.email,
         customerPhone: order.customer.phone,
@@ -257,11 +258,16 @@ export function createServerOrder(data: {
           note: t.notes || t.event,
         })),
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     ).catch((err: any) => console.error('⚠️ [OrderService] MongoDB Order save failed:', err.message));
 
+    const custFirebaseUid = (order as any).firebaseUid || (order.customer as any)?.firebaseUid;
+    const custFilter = custFirebaseUid
+      ? { firebaseUid: custFirebaseUid }
+      : (order.customer.email ? { email: order.customer.email.toLowerCase() } : { phone: order.customer.phone });
+
     (CustomerModel as any).findOneAndUpdate(
-      { phone: order.customer.phone },
+      custFilter,
       {
         $set: {
           fullName: order.customer.fullName,
@@ -271,6 +277,7 @@ export function createServerOrder(data: {
           province: order.customer.province,
           district: order.customer.district,
           lastOrderDate: new Date(),
+          ...(custFirebaseUid ? { firebaseUid: custFirebaseUid } : {}),
         },
         $inc: { totalOrders: 1, totalSpent: order.total },
         $setOnInsert: { id: `cust-${Date.now()}`, status: 'ACTIVE', tags: ['Storefront Customer'] },
