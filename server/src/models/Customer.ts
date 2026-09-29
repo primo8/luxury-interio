@@ -85,6 +85,5 @@ const CustomerSchema = new Schema<ICustomerDocument>(
 );
 
 CustomerSchema.index({ totalSpent: -1 });
-CustomerSchema.index({ firebaseUid: 1 });
 
 export const CustomerModel = mongoose.models.Customer || mongoose.model<ICustomerDocument>('Customer', CustomerSchema);

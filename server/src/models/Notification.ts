@@ -2,7 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 
 export interface INotificationDocument {
   id: string;
-  type: 'ORDER' | 'PAYMENT' | 'STOCK' | 'CUSTOMER' | 'REVIEW' | 'SYSTEM';
+  type: string;
   title: string;
   message: string;
   isRead: boolean;
@@ -16,8 +16,8 @@ const NotificationSchema = new Schema<INotificationDocument>(
     id: { type: String, required: true, unique: true, index: true },
     type: {
       type: String,
-      enum: ['ORDER', 'PAYMENT', 'STOCK', 'CUSTOMER', 'REVIEW', 'SYSTEM'],
-      required: true,
+      default: 'SYSTEM',
+      index: true,
     },
     title: { type: String, required: true },
     message: { type: String, required: true },
