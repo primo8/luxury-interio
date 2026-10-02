@@ -3,6 +3,7 @@ import { X, Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { SafeImage } from '../common/SafeImage';
+import { useModalPhoneBack } from '../../hooks/useModalPhoneBack';
 import type { Product } from '../../types';
 
 interface WishlistDrawerProps {
@@ -12,6 +13,13 @@ interface WishlistDrawerProps {
 export const WishlistDrawer: React.FC<WishlistDrawerProps> = () => {
   const { items, isOpen, closeWishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
+
+  // Phone Back Button Interception
+  useModalPhoneBack({
+    isOpen,
+    onBack: closeWishlist,
+    modalKey: 'wishlist',
+  });
 
   if (!isOpen) return null;
 

@@ -655,3 +655,56 @@ img {
   }
 }
 
+/* Universal Mobile Resolution & Form Helpers */
+.checkout-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 540px) {
+  .checkout-two-col-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+.checkout-step-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 420px) {
+  .checkout-step-nav {
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .checkout-step-nav .step-divider {
+    width: 10px !important;
+  }
+  .checkout-step-nav .step-label {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Ensure modal overlays always stay bounded within screen on all devices */
+.modal-overlay-wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2.5vw, 20px);
+  box-sizing: border-box;
+}
+
+.modal-content-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+

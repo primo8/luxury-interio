@@ -311,6 +311,49 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     onClose();
   };
 
+  // Mobile Phone Back Button Step-by-Step Navigation
+  const stepRef = useRef(step);
+  stepRef.current = step;
+  const isPushedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      isPushedRef.current = false;
+      return;
+    }
+
+    // Push initial checkout history entry
+    window.history.pushState({ furnituraModal: 'checkout', step: 'customer', ts: Date.now() }, '');
+    isPushedRef.current = true;
+
+    const handlePopState = () => {
+      const currentStep = stepRef.current;
+      if (currentStep === 'payment') {
+        // Step back from payment to delivery in 1 step
+        setStep('delivery');
+        window.history.pushState({ furnituraModal: 'checkout', step: 'delivery', ts: Date.now() }, '');
+      } else if (currentStep === 'delivery') {
+        // Step back from delivery to customer in 1 step
+        setStep('customer');
+        window.history.pushState({ furnituraModal: 'checkout', step: 'customer', ts: Date.now() }, '');
+      } else {
+        // Step 1: Close checkout modal safely
+        isPushedRef.current = false;
+        handleCloseModal();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (isPushedRef.current && window.history.state?.furnituraModal === 'checkout') {
+        isPushedRef.current = false;
+        window.history.back();
+      }
+    };
+  }, [isOpen]);
+
   return (
     <div
       style={{
@@ -322,7 +365,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         justifyContent: 'center',
         backgroundColor: 'rgba(22, 6, 32, 0.82)',
         backdropFilter: 'blur(10px)',
-        padding: '16px',
+        padding: 'clamp(8px, 2.5vw, 16px)',
         animation: 'fadeIn 0.22s ease-out',
       }}
       role="dialog"
@@ -432,47 +475,41 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <div style={{ padding: 'clamp(16px, 3.5vw, 32px)', display: 'flex', flexDirection: 'column' }}>
             {/* Step Indicators (Hidden on Success) */}
             {paymentState.status !== 'SUCCESSFUL' && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '28px',
-                }}
-              >
+              <div className="checkout-step-nav">
                 {/* Step 1 */}
                 <div
                   onClick={() => paymentState.status === 'IDLE' && setStep('customer')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: '6px',
                     cursor: paymentState.status === 'IDLE' ? 'pointer' : 'default',
                     opacity: step === 'customer' ? 1 : 0.6,
                   }}
                 >
                   <div
                     style={{
-                      width: '26px',
-                      height: '26px',
+                      width: '24px',
+                      height: '24px',
                       borderRadius: '50%',
                       backgroundColor: step === 'customer' ? 'var(--color-plum-800)' : '#e2d8ea',
                       color: step === 'customer' ? '#ffffff' : 'var(--color-plum-900)',
-                      fontSize: '0.78rem',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
                     1
                   </div>
-                  <span style={{ fontSize: '0.82rem', fontWeight: step === 'customer' ? 700 : 500 }}>
+                  <span className="step-label" style={{ fontSize: '0.82rem', fontWeight: step === 'customer' ? 700 : 500 }}>
                     Customer
                   </span>
                 </div>
 
-                <div style={{ width: '20px', height: '1px', backgroundColor: '#d8cde2' }} />
+                <div className="step-divider" style={{ width: '20px', height: '1px', backgroundColor: '#d8cde2' }} />
 
                 {/* Step 2 */}
                 <div
@@ -480,60 +517,62 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: '6px',
                     cursor: paymentState.status === 'IDLE' ? 'pointer' : 'default',
                     opacity: step === 'delivery' ? 1 : 0.6,
                   }}
                 >
                   <div
                     style={{
-                      width: '26px',
-                      height: '26px',
+                      width: '24px',
+                      height: '24px',
                       borderRadius: '50%',
                       backgroundColor: step === 'delivery' ? 'var(--color-plum-800)' : '#e2d8ea',
                       color: step === 'delivery' ? '#ffffff' : 'var(--color-plum-900)',
-                      fontSize: '0.78rem',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
                     2
                   </div>
-                  <span style={{ fontSize: '0.82rem', fontWeight: step === 'delivery' ? 700 : 500 }}>
+                  <span className="step-label" style={{ fontSize: '0.82rem', fontWeight: step === 'delivery' ? 700 : 500 }}>
                     Delivery
                   </span>
                 </div>
 
-                <div style={{ width: '20px', height: '1px', backgroundColor: '#d8cde2' }} />
+                <div className="step-divider" style={{ width: '20px', height: '1px', backgroundColor: '#d8cde2' }} />
 
                 {/* Step 3 */}
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: '6px',
                     opacity: step === 'payment' ? 1 : 0.6,
                   }}
                 >
                   <div
                     style={{
-                      width: '26px',
-                      height: '26px',
+                      width: '24px',
+                      height: '24px',
                       borderRadius: '50%',
                       backgroundColor: step === 'payment' ? 'var(--color-plum-800)' : '#e2d8ea',
                       color: step === 'payment' ? '#ffffff' : 'var(--color-plum-900)',
-                      fontSize: '0.78rem',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
                     3
                   </div>
-                  <span style={{ fontSize: '0.82rem', fontWeight: step === 'payment' ? 700 : 500 }}>
+                  <span className="step-label" style={{ fontSize: '0.82rem', fontWeight: step === 'payment' ? 700 : 500 }}>
                     Payment
                   </span>
                 </div>
@@ -586,7 +625,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
 
                 {/* Email and Phone */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="checkout-two-col-grid">
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '6px' }}>
                       Email Address *
@@ -683,7 +722,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </p>
 
                 {/* Province & District */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="checkout-two-col-grid">
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '6px' }}>
                       Province / City *

@@ -15,6 +15,7 @@ import {
   simulatePaymentStatus,
   fetchPaymentStatus,
 } from '../../utils/payment';
+import { useModalPhoneBack } from '../../hooks/useModalPhoneBack';
 
 interface MtnSandboxTestPanelProps {
   isOpen: boolean;
@@ -28,6 +29,13 @@ export const MtnSandboxTestPanel: React.FC<MtnSandboxTestPanelProps> = ({ isOpen
   const [testPhone, setTestPhone] = useState('0788123456');
   const [testAmount, setTestAmount] = useState('150');
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Phone Back Button Interception
+  useModalPhoneBack({
+    isOpen,
+    onBack: onClose,
+    modalKey: 'sandbox-test-panel',
+  });
 
   const loadData = async () => {
     setIsLoading(true);
@@ -118,7 +126,7 @@ export const MtnSandboxTestPanel: React.FC<MtnSandboxTestPanelProps> = ({ isOpen
         justifyContent: 'center',
         backgroundColor: 'rgba(15, 7, 22, 0.85)',
         backdropFilter: 'blur(10px)',
-        padding: '20px',
+        padding: 'clamp(8px, 2.5vw, 20px)',
         animation: 'fadeIn 0.2s ease-out',
       }}
       role="dialog"

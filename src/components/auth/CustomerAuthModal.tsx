@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useUserAuth } from '../../context/UserAuthContext';
 import { SafeImage } from '../common/SafeImage';
+import { useModalPhoneBack } from '../../hooks/useModalPhoneBack';
 
 export const CustomerAuthModal: React.FC = () => {
   const {
@@ -37,6 +38,13 @@ export const CustomerAuthModal: React.FC = () => {
     deleteAddress,
     fetchOrders,
   } = useUserAuth();
+
+  // Phone Back Button Interception
+  useModalPhoneBack({
+    isOpen: isAuthModalOpen,
+    onBack: closeAuthModal,
+    modalKey: 'customer-auth',
+  });
 
   // Form states
   const [email, setEmail] = useState('');

@@ -5,6 +5,7 @@ import { StarRating } from './StarRating';
 import { SafeImage } from '../common/SafeImage';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useModalPhoneBack } from '../../hooks/useModalPhoneBack';
 
 interface ProductQuickViewProps {
   product: Product | null;
@@ -29,6 +30,13 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
+
+  // Phone Back Button Interception
+  useModalPhoneBack({
+    isOpen,
+    onBack: onClose,
+    modalKey: 'product-quickview',
+  });
 
   useEffect(() => {
     if (product) {

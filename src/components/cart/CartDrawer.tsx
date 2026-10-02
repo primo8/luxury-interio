@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Truck, Tag, ShieldCheck, Lock } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { SafeImage } from '../common/SafeImage';
+import { useModalPhoneBack } from '../../hooks/useModalPhoneBack';
 
 interface CartDrawerProps {
   onProceedToCheckout: () => void;
@@ -29,6 +30,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onProceedToCheckout, onE
 
   const [inputCoupon, setInputCoupon] = useState('');
   const [couponFeedback, setCouponFeedback] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Phone Back Button Interception
+  useModalPhoneBack({
+    isOpen,
+    onBack: closeCart,
+    modalKey: 'cart',
+  });
 
   if (!isOpen) return null;
 

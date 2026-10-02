@@ -4,6 +4,7 @@ import { Furniture3DScene } from './ThreeFurnitureScene';
 import { X, RotateCw, Layers, Sliders, Box, Check, ShoppingBag, Heart, ShieldCheck, Ruler } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useModalPhoneBack } from '../../hooks/useModalPhoneBack';
 
 interface Product3DModalProps {
   product: Product | null;
@@ -22,6 +23,13 @@ export const Product3DModal: React.FC<Product3DModalProps> = ({ product, isOpen,
   const [wireframe, setWireframe] = useState(false);
   const [exploded, setExploded] = useState(false);
   const [quantity, setQuantity] = useState(1);
+
+  // Phone Back Button Interception
+  useModalPhoneBack({
+    isOpen,
+    onBack: onClose,
+    modalKey: 'product-3d-inspector',
+  });
 
   useEffect(() => {
     if (!product || !isOpen) return;

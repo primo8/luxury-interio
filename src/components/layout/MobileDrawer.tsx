@@ -2,6 +2,7 @@ import React from 'react';
 import { X, ChevronRight, Sparkles, Phone, MapPin, User } from 'lucide-react';
 import { CATEGORIES } from '../../data/categories';
 import { useUserAuth } from '../../context/UserAuthContext';
+import { useModalPhoneBack } from '../../hooks/useModalPhoneBack';
 import type { RoomType } from '../../types';
 
 interface MobileDrawerProps {
@@ -18,6 +19,14 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onSelectOffers,
 }) => {
   const { customer, openAuthModal } = useUserAuth();
+
+  // Phone Back Button Interception
+  useModalPhoneBack({
+    isOpen,
+    onBack: onClose,
+    modalKey: 'mobile-drawer',
+  });
+
   if (!isOpen) return null;
 
   return (
