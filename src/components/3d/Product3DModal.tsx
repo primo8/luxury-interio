@@ -116,6 +116,7 @@ export const Product3DModal: React.FC<Product3DModalProps> = ({ product, isOpen,
       aria-label={`${product.name} 3D Interactive Inspector`}
     >
       <div 
+        className="product-3d-modal-grid"
         style={{
           width: '100%',
           maxWidth: '1100px',
@@ -125,7 +126,6 @@ export const Product3DModal: React.FC<Product3DModalProps> = ({ product, isOpen,
           borderRadius: '20px',
           overflow: 'hidden',
           display: 'grid',
-          gridTemplateColumns: '1fr 380px',
           boxShadow: '0 25px 60px rgba(0,0,0,0.4)',
           position: 'relative',
         }}
@@ -155,121 +155,123 @@ export const Product3DModal: React.FC<Product3DModalProps> = ({ product, isOpen,
         </button>
 
         {/* 3D Canvas Viewport Side */}
-        <div style={{ position: 'relative', backgroundColor: '#f9f6fc', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'relative', backgroundColor: '#f9f6fc', minHeight: '320px', height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Top Bar Controls */}
           <div style={{
             position: 'absolute',
-            top: '20px',
-            left: '20px',
-            right: '20px',
+            top: '14px',
+            left: '14px',
+            right: '14px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '8px',
             zIndex: 10,
             pointerEvents: 'none'
           }}>
             <div style={{
               background: 'rgba(59, 24, 79, 0.9)',
               color: '#ffffff',
-              padding: '6px 14px',
+              padding: '6px 12px',
               borderRadius: '24px',
-              fontSize: '0.78rem',
+              fontSize: '0.72rem',
               fontWeight: 600,
               letterSpacing: '0.5px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px'
             }}>
-              <Box size={14} color="#d4af37" />
-              <span>REAL-TIME 3D INSPECTOR</span>
+              <Box size={13} color="#d4af37" />
+              <span>3D INSPECTOR</span>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
+            <div style={{ display: 'flex', gap: '6px', pointerEvents: 'auto', flexWrap: 'wrap' }}>
               <button
                 onClick={handleToggleAutoRotate}
                 style={{
-                  padding: '6px 12px',
+                  padding: '5px 10px',
                   borderRadius: '20px',
                   backgroundColor: autoRotate ? 'var(--color-plum-800)' : 'rgba(255,255,255,0.9)',
                   color: autoRotate ? '#ffffff' : 'var(--color-plum-900)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.72rem',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '4px',
                   border: '1px solid rgba(59,24,79,0.12)',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
                 }}
               >
-                <RotateCw size={13} />
+                <RotateCw size={12} />
                 <span>Rotate</span>
               </button>
 
               <button
                 onClick={handleToggleExploded}
                 style={{
-                  padding: '6px 12px',
+                  padding: '5px 10px',
                   borderRadius: '20px',
                   backgroundColor: exploded ? 'var(--color-plum-800)' : 'rgba(255,255,255,0.9)',
                   color: exploded ? '#ffffff' : 'var(--color-plum-900)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.72rem',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '4px',
                   border: '1px solid rgba(59,24,79,0.12)',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
                 }}
               >
-                <Sliders size={13} />
-                <span>Exploded</span>
+                <Sliders size={12} />
+                <span>Explode</span>
               </button>
 
               <button
                 onClick={handleToggleWireframe}
                 style={{
-                  padding: '6px 12px',
+                  padding: '5px 10px',
                   borderRadius: '20px',
                   backgroundColor: wireframe ? 'var(--color-plum-800)' : 'rgba(255,255,255,0.9)',
                   color: wireframe ? '#ffffff' : 'var(--color-plum-900)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.72rem',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '4px',
                   border: '1px solid rgba(59,24,79,0.12)',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
                 }}
               >
-                <Layers size={13} />
+                <Layers size={12} />
                 <span>Wireframe</span>
               </button>
             </div>
           </div>
 
           {/* Three.js DOM Container */}
-          <div ref={containerRef} style={{ flex: 1, width: '100%', cursor: 'grab' }} />
+          <div ref={containerRef} style={{ flex: 1, minHeight: '300px', width: '100%', cursor: 'grab' }} />
 
           {/* Bottom Guidance */}
           <div style={{
             position: 'absolute',
-            bottom: '16px',
-            left: '20px',
+            bottom: '12px',
+            left: '14px',
             color: 'var(--color-text-muted)',
-            fontSize: '0.75rem',
+            fontSize: '0.7rem',
             background: 'rgba(255,255,255,0.85)',
             backdropFilter: 'blur(8px)',
-            padding: '4px 12px',
-            borderRadius: '12px',
+            padding: '3px 10px',
+            borderRadius: '10px',
             pointerEvents: 'none'
           }}>
-            🖱️ Drag to rotate 360° | 📜 Scroll to zoom in/out
+            🖱️ Drag to rotate • 📜 Scroll/pinch to zoom
           </div>
         </div>
 
         {/* Product Details & Customizer Panel */}
         <div style={{
-          padding: '32px 28px',
+          padding: 'clamp(18px, 4vw, 32px) clamp(16px, 3.5vw, 28px)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',

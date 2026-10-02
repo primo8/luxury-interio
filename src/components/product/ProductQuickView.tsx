@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Product, ColorOption } from '../../types';
 import { X, Check, ShoppingBag, Heart, Box, ShieldCheck, Truck, ArrowRight } from 'lucide-react';
 import { StarRating } from './StarRating';
+import { SafeImage } from '../common/SafeImage';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 
@@ -71,9 +72,9 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(22, 6, 32, 0.75)',
+        backgroundColor: 'rgba(22, 6, 32, 0.78)',
         backdropFilter: 'blur(10px)',
-        padding: '20px',
+        padding: 'clamp(8px, 2.5vw, 20px)',
         animation: 'fadeIn 0.2s ease-out',
       }}
       role="dialog"
@@ -84,14 +85,12 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
         style={{
           width: '100%',
           maxWidth: '960px',
-          maxHeight: '90vh',
+          maxHeight: '92vh',
           backgroundColor: '#ffffff',
           borderRadius: '20px',
           overflowY: 'auto',
           boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
           position: 'relative',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1.15fr',
         }}
         className="quickview-modal-grid"
       >
@@ -100,11 +99,11 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
           onClick={onClose}
           style={{
             position: 'absolute',
-            top: '16px',
-            right: '16px',
+            top: '14px',
+            right: '14px',
             zIndex: 30,
-            width: '38px',
-            height: '38px',
+            width: '36px',
+            height: '36px',
             borderRadius: '50%',
             backgroundColor: '#f2ecf6',
             color: 'var(--color-plum-900)',
@@ -112,6 +111,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             transition: 'background-color 0.2s',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}
           aria-label="Close Preview"
         >
@@ -121,7 +121,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
         {/* Left Column: Visual Gallery & 3D Launcher */}
         <div
           style={{
-            padding: '32px',
+            padding: 'clamp(16px, 3.5vw, 30px)',
             backgroundColor: '#faf7fc',
             display: 'flex',
             flexDirection: 'column',
@@ -131,19 +131,20 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
           {/* Main Visual */}
           <div
             style={{
-              height: '360px',
+              height: 'clamp(220px, 40vw, 340px)',
               width: '100%',
               borderRadius: '14px',
               overflow: 'hidden',
-              marginBottom: '16px',
+              marginBottom: '14px',
               backgroundColor: '#ffffff',
               boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
               position: 'relative',
             }}
           >
-            <img
+            <SafeImage
               src={selectedImage || product.image}
               alt={product.name}
+              fallbackSrc="/hero-chair.jpg"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
 
@@ -168,21 +169,22 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
                 fontWeight: 700,
                 letterSpacing: '0.5px',
                 backdropFilter: 'blur(6px)',
+                zIndex: 10,
               }}
             >
-              <Box size={14} />
+              <Box size={14} color="var(--color-gold)" />
               <span>3D STUDIO</span>
             </button>
           </div>
 
           {/* Thumbnails */}
           {product.galleryImages && product.galleryImages.length > 0 && (
-            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
               <div
                 onClick={() => setSelectedImage(product.image)}
                 style={{
-                  width: '64px',
-                  height: '64px',
+                  width: '60px',
+                  height: '60px',
                   borderRadius: '8px',
                   overflow: 'hidden',
                   cursor: 'pointer',
@@ -190,15 +192,15 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
                   flexShrink: 0,
                 }}
               >
-                <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <SafeImage src={product.image} alt={product.name} fallbackSrc="/hero-chair.jpg" />
               </div>
               {product.galleryImages.map((img, idx) => (
                 <div
                   key={idx}
                   onClick={() => setSelectedImage(img)}
                   style={{
-                    width: '64px',
-                    height: '64px',
+                    width: '60px',
+                    height: '60px',
                     borderRadius: '8px',
                     overflow: 'hidden',
                     cursor: 'pointer',
@@ -206,27 +208,27 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
                     flexShrink: 0,
                   }}
                 >
-                  <img src={img} alt={`${product.name} detail ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <SafeImage src={img} alt={`${product.name} detail ${idx + 1}`} fallbackSrc="/hero-chair.jpg" />
                 </div>
               ))}
             </div>
           )}
 
           {/* Quick Trust Highlights */}
-          <div style={{ marginTop: 'auto', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-              <Truck size={15} color="var(--color-plum-700)" />
+          <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
+              <Truck size={14} color="var(--color-plum-700)" style={{ flexShrink: 0 }} />
               <span>Complimentary White-Glove delivery on orders $999+</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-              <ShieldCheck size={15} color="#2a9d8f" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
+              <ShieldCheck size={14} color="#2a9d8f" style={{ flexShrink: 0 }} />
               <span>10-Year Master Craftsman Warranty</span>
             </div>
           </div>
         </div>
 
         {/* Right Column: Editorial Product Details & Purchasing */}
-        <div style={{ padding: '36px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: 'clamp(18px, 4vw, 32px)', display: 'flex', flexDirection: 'column' }}>
           {/* Category & Room */}
           <div
             style={{

@@ -78,17 +78,19 @@ export const NewsletterVIP: React.FC = () => {
               onSubmit={handleSubmit}
               style={{
                 display: 'flex',
+                flexWrap: 'wrap',
                 maxWidth: '520px',
                 margin: '0 auto',
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 backdropFilter: 'blur(10px)',
-                borderRadius: '30px',
+                borderRadius: '24px',
                 padding: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                gap: '8px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', flex: 1, paddingLeft: '16px' }}>
-                <Mail size={18} color="rgba(255, 255, 255, 0.6)" style={{ marginRight: '10px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 240px', padding: '8px 12px 8px 16px', minWidth: 0 }}>
+                <Mail size={18} color="rgba(255, 255, 255, 0.6)" style={{ marginRight: '10px', flexShrink: 0 }} />
                 <input
                   type="email"
                   placeholder="Enter your email address..."
@@ -102,7 +104,7 @@ export const NewsletterVIP: React.FC = () => {
                     outline: 'none',
                     color: '#ffffff',
                     fontSize: '0.9rem',
-                    fontFamily: 'inherit'
+                    fontFamily: 'inherit',
                   }}
                   aria-label="Email address for newsletter"
                 />
@@ -116,10 +118,13 @@ export const NewsletterVIP: React.FC = () => {
                   fontWeight: 700,
                   fontSize: '0.85rem',
                   padding: '12px 24px',
-                  borderRadius: '24px',
+                  borderRadius: '20px',
                   letterSpacing: '0.6px',
                   textTransform: 'uppercase',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                  flex: '0 0 auto',
+                  minHeight: '44px',
                 }}
               >
                 JOIN NOW

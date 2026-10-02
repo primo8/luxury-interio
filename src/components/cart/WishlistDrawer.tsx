@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
+import { SafeImage } from '../common/SafeImage';
 import type { Product } from '../../types';
 
 interface WishlistDrawerProps {
@@ -26,8 +27,8 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = () => {
       animation: 'fadeIn 0.2s ease-out'
     }}>
       <div style={{
-        width: '420px',
-        maxWidth: '90vw',
+        width: '100%',
+        maxWidth: '420px',
         height: '100%',
         backgroundColor: '#ffffff',
         display: 'flex',
@@ -90,11 +91,13 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = () => {
                     alignItems: 'center'
                   }}
                 >
-                  <img
-                    src={item.product.image}
-                    alt={item.product.name}
-                    style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px', backgroundColor: '#faf7fc' }}
-                  />
+                  <div style={{ width: '70px', height: '70px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#faf7fc' }}>
+                    <SafeImage
+                      src={item.product.image}
+                      alt={item.product.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
                   <div style={{ flex: 1 }}>
                     <h4 style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '4px' }}>
                       {item.product.name}

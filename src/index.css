@@ -318,75 +318,199 @@ img {
   align-items: center;
 }
 
-/* Responsive Grids */
+/* Responsive Grids & Device Breakpoints */
+.header-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+  align-items: center;
+  gap: 24px;
+}
+
+.mobile-dock {
+  display: none;
+}
+
+.show-mobile-flex {
+  display: none !important;
+}
+
+.quickview-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+}
+
+.product-3d-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+}
+
+.checkout-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+}
+
+.shop-by-room-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.popular-products-grid,
+.deals-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.promo-banners-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+  gap: 40px;
+}
+
+.product-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+/* Tablet Breakpoint (max-width: 1200px) */
 @media (max-width: 1200px) {
   .popular-products-grid,
   .deals-grid {
     grid-template-columns: repeat(3, 1fr) !important;
+    gap: 18px !important;
   }
 }
 
+/* Small Tablet Breakpoint (max-width: 1024px) */
 @media (max-width: 1024px) {
+  .header-grid {
+    grid-template-columns: 200px 1fr auto !important;
+    gap: 16px !important;
+  }
+
   .hero-grid {
     grid-template-columns: 1fr !important;
-    gap: 30px !important;
+    gap: 28px !important;
   }
 
   .shop-by-room-grid {
     grid-template-columns: repeat(3, 1fr) !important;
+    gap: 16px !important;
   }
 
   .footer-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-
-@media (max-width: 900px) {
-  .promo-banners-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .value-props-bar {
-    grid-template-columns: repeat(2, 1fr);
-    padding: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .hidden-mobile {
-    display: none !important;
-  }
-
-  .show-mobile-hamburger {
-    display: flex !important;
-  }
-
-  .popular-products-grid,
-  .deals-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 14px !important;
+    gap: 30px !important;
   }
 
   .quickview-modal-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Mobile floating dock styles (Reference 2 Inspiration) */
+  .product-3d-modal-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+  }
+
+  .checkout-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Medium Mobile / Small Tablet (max-width: 900px) */
+@media (max-width: 900px) {
+  .promo-banners-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .value-props-bar {
+    grid-template-columns: repeat(2, 1fr) !important;
+    padding: 18px !important;
+    gap: 16px !important;
+  }
+}
+
+/* Standard Mobile Phones (max-width: 768px) */
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+
+  .show-mobile-flex {
+    display: flex !important;
+  }
+
+  .header-grid {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .popular-products-grid,
+  .deals-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .product-card {
+    padding: 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .product-card-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .product-card-btn-text {
+    font-size: 0.72rem !important;
+    padding: 8px 4px !important;
+  }
+
+  .shop-by-room-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .category-circle-img-container {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  /* Mobile floating dock styles */
   .mobile-dock {
-    display: flex;
+    display: flex !important;
     position: fixed;
-    bottom: 20px;
+    bottom: max(14px, env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     z-index: 990;
-    width: calc(100% - 32px);
+    width: calc(100% - 24px);
     max-width: 420px;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(59, 24, 79, 0.12);
     border-radius: 36px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     box-shadow: 0 14px 40px rgba(37, 13, 51, 0.22);
     align-items: center;
     justify-content: space-around;
@@ -397,12 +521,12 @@ img {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 48px;
-    min-height: 48px;
-    padding: 4px 8px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 4px 6px;
     border-radius: 20px;
     color: var(--color-text-muted);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 500;
     transition: all var(--transition-fast);
     position: relative;
@@ -415,8 +539,8 @@ img {
   }
 
   .mobile-dock-fab {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--color-plum-700), var(--color-violet-vibrant));
     color: #ffffff;
@@ -424,7 +548,7 @@ img {
     align-items: center;
     justify-content: center;
     box-shadow: 0 6px 18px rgba(142, 45, 226, 0.45);
-    margin-top: -18px;
+    margin-top: -16px;
     border: 3px solid #ffffff;
     transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
   }
@@ -434,21 +558,100 @@ img {
   }
 
   body {
-    padding-bottom: 90px;
+    padding-bottom: 84px;
+  }
+
+  .container {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
   }
 }
 
+/* Compact Mobile (max-width: 480px - iPhone 14/15/16, Samsung Galaxy, Pixel) */
 @media (max-width: 480px) {
   .shop-by-room-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .category-circle-img-container {
+    width: 72px !important;
+    height: 72px !important;
+    margin-bottom: 8px !important;
   }
 
   .value-props-bar {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 16px !important;
   }
 
   .footer-grid {
     grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .hero-slide-btn-group {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .hero-slide-btn-group > * {
+    width: 100% !important;
+    justify-content: center !important;
   }
 }
+
+/* Ultra Small / Folded Screens (max-width: 360px - Galaxy Fold, iPhone SE 1st Gen) */
+@media (max-width: 360px) {
+  .popular-products-grid,
+  .deals-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .shop-by-room-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .category-circle-img-container {
+    width: 68px !important;
+    height: 68px !important;
+  }
+
+  .container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+
+/* Micro / Foldable Outer Screens (max-width: 300px - Galaxy Z Fold Outer Display, Wearable Displays) */
+@media (max-width: 300px) {
+  .container {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+
+  .hero-slide-btn-group button {
+    font-size: 0.72rem !important;
+    padding: 8px 12px !important;
+  }
+
+  .mobile-dock {
+    width: calc(100% - 12px) !important;
+    padding: 4px 6px !important;
+  }
+
+  .mobile-dock-item {
+    font-size: 0.6rem !important;
+    min-width: 36px !important;
+  }
+
+  .mobile-dock-fab {
+    width: 42px !important;
+    height: 42px !important;
+  }
+}
+

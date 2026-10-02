@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { SafeImage } from '../common/SafeImage';
 import {
   submitCheckoutAndPay,
   fetchPaymentStatus,
@@ -422,14 +423,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: paymentState.status === 'SUCCESSFUL' ? '1fr' : '1fr 360px',
             flex: 1,
             minHeight: '480px',
           }}
           className="checkout-modal-grid"
         >
           {/* Left / Main Section: Step Flow & Payment States */}
-          <div style={{ padding: '32px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: 'clamp(16px, 3.5vw, 32px)', display: 'flex', flexDirection: 'column' }}>
             {/* Step Indicators (Hidden on Success) */}
             {paymentState.status !== 'SUCCESSFUL' && (
               <div
@@ -1404,11 +1404,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '220px', overflowY: 'auto', marginBottom: '20px' }}>
                   {itemsToCheckout.map((item, idx) => (
                     <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        style={{ width: '48px', height: '48px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }}
-                      />
+                      <div style={{ width: '48px', height: '48px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0 }}>
+                        <SafeImage
+                          src={item.product.image}
+                          alt={item.product.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div
                           style={{

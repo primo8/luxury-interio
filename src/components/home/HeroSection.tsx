@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Sparkles, Box, ChevronLeft, ChevronRight, Pause, Play, Eye } from 'lucide-react';
 import { Hero3DViewer } from '../3d/Hero3DViewer';
+import { SafeImage } from '../common/SafeImage';
 import type { RoomType } from '../../types';
 
 interface HeroSectionProps {
@@ -62,7 +63,7 @@ const HERO_SLIDES: HeroSlide[] = [
   }
 ];
 
-const SLIDE_DURATION = 4000; // 4 seconds per slide
+const SLIDE_DURATION = 4500; // 4.5 seconds per slide
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStudio }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -70,6 +71,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
   const [viewMode, setViewMode] = useState<'lookbook' | '3d'>('lookbook');
   const [progress, setProgress] = useState(0);
   const isHoveredRef = useRef(false);
+  const touchStartXRef = useRef<number | null>(null);
 
   const currentSlide = HERO_SLIDES[currentSlideIndex];
 
@@ -110,12 +112,33 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
     setCurrentSlideIndex(index);
   };
 
+  // Touch Swipe Handlers for mobile gestures
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartXRef.current - touchEndX;
+
+    // Threshold of 40px for swipe gesture
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        handleNextSlide();
+      } else {
+        handlePrevSlide();
+      }
+    }
+    touchStartXRef.current = null;
+  };
+
   return (
     <section
       style={{
         position: 'relative',
         color: '#ffffff',
-        minHeight: '560px',
+        minHeight: '520px',
         overflow: 'hidden',
         backgroundColor: '#160620',
         display: 'flex',
@@ -124,6 +147,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
       }}
       onMouseEnter={() => { isHoveredRef.current = true; }}
       onMouseLeave={() => { isHoveredRef.current = false; }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      aria-label="Featured Furniture Lookbook"
     >
       {/* Background Image Carousel Layer (High Clarity & Visibility) */}
       {HERO_SLIDES.map((slide, index) => {
@@ -141,9 +167,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
               zIndex: 1,
             }}
           >
-            <img
+            <SafeImage
               src={slide.image}
               alt={slide.title}
+              fallbackSrc="/hero-chair.jpg"
+              loading={index === 0 ? 'eager' : 'lazy'}
               style={{
                 width: '100%',
                 height: '100%',
@@ -161,7 +189,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(90deg, rgba(18, 5, 26, 0.95) 0%, rgba(24, 7, 34, 0.82) 36%, rgba(30, 10, 42, 0.4) 65%, rgba(18, 5, 26, 0.15) 100%)',
+          background: 'linear-gradient(90deg, rgba(18, 5, 26, 0.94) 0%, rgba(24, 7, 34, 0.82) 40%, rgba(30, 10, 42, 0.45) 70%, rgba(18, 5, 26, 0.2) 100%)',
           zIndex: 2,
           pointerEvents: 'none',
         }}
@@ -182,12 +210,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
       />
 
       {/* Main Content Area */}
-      <div className="container" style={{ position: 'relative', zIndex: 10, padding: '40px 20px 48px 20px' }}>
+      <div className="container" style={{ position: 'relative', zIndex: 10, padding: '36px 16px 40px 16px' }}>
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: viewMode === '3d' ? '1fr 1.15fr' : '1.15fr 0.85fr',
-            gap: '36px',
+            gap: '28px',
             alignItems: 'center',
           }}
           className="hero-grid"
@@ -195,25 +223,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
           {/* Left Column: Dynamic Hero Content for Active Slide */}
           <div style={{ maxWidth: '640px' }}>
             {/* Tag / Category Badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
               <div
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: '6px',
                   backgroundColor: 'rgba(212, 175, 55, 0.18)',
                   border: '1px solid rgba(212, 175, 55, 0.4)',
                   color: 'var(--color-gold)',
-                  padding: '6px 14px',
+                  padding: '5px 12px',
                   borderRadius: '20px',
-                  fontSize: '0.74rem',
+                  fontSize: '0.72rem',
                   fontWeight: 800,
-                  letterSpacing: '1.4px',
+                  letterSpacing: '1.2px',
                   textTransform: 'uppercase',
                   backdropFilter: 'blur(8px)',
                 }}
               >
-                <Sparkles size={14} />
+                <Sparkles size={13} />
                 <span>THE NEW FURNITURA COLLECTION</span>
               </div>
 
@@ -222,12 +250,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                   backgroundColor: 'rgba(255, 255, 255, 0.12)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#ffffff',
-                  fontSize: '0.7rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700,
-                  padding: '5px 12px',
+                  padding: '4px 10px',
                   borderRadius: '16px',
                   backdropFilter: 'blur(8px)',
-                  letterSpacing: '0.6px',
+                  letterSpacing: '0.5px',
                 }}
               >
                 {currentSlide.accentBadge}
@@ -239,14 +267,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
               key={currentSlide.id + '-title'}
               style={{
                 fontFamily: 'var(--font-serif)',
-                fontSize: 'clamp(2.3rem, 4.4vw, 3.8rem)',
-                lineHeight: 1.12,
+                fontSize: 'clamp(1.9rem, 4.5vw, 3.6rem)',
+                lineHeight: 1.15,
                 fontWeight: 700,
                 letterSpacing: '-0.5px',
-                marginBottom: '16px',
+                marginBottom: '14px',
                 color: '#ffffff',
                 textShadow: '0 2px 18px rgba(0,0,0,0.5)',
-                animation: 'fadeIn 0.5s ease-out',
+                animation: 'fadeIn 0.4s ease-out',
               }}
             >
               Elegant Furniture <br />
@@ -259,43 +287,44 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
             <p
               key={currentSlide.id + '-desc'}
               style={{
-                fontSize: 'clamp(0.95rem, 1.2vw, 1.12rem)',
+                fontSize: 'clamp(0.88rem, 2.5vw, 1.05rem)',
                 color: 'rgba(255, 255, 255, 0.9)',
                 fontWeight: 400,
-                marginBottom: '30px',
-                lineHeight: 1.6,
+                marginBottom: '24px',
+                lineHeight: 1.55,
                 maxWidth: '560px',
                 textShadow: '0 1px 8px rgba(0,0,0,0.4)',
-                animation: 'fadeIn 0.5s ease-out',
+                animation: 'fadeIn 0.4s ease-out',
               }}
             >
               Timeless design, exceptional comfort, beautifully crafted for the way you live. Featuring our {currentSlide.title}.
             </p>
 
             {/* CTA Action Buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }} className="hero-slide-btn-group">
               <button
                 onClick={() => onShopNow(currentSlide.room)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: '8px',
                   backgroundColor: 'var(--color-plum-800)',
                   color: '#ffffff',
-                  padding: '14px 30px',
+                  padding: '12px 26px',
                   borderRadius: '8px',
                   fontWeight: 700,
-                  fontSize: '0.88rem',
-                  letterSpacing: '0.8px',
+                  fontSize: '0.84rem',
+                  letterSpacing: '0.6px',
                   textTransform: 'uppercase',
                   border: '1px solid rgba(212, 175, 55, 0.3)',
                   boxShadow: '0 8px 25px rgba(37, 13, 51, 0.5)',
                   transition: 'all 0.25s ease',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
                 <span>SHOP COLLECTION</span>
-                <ArrowRight size={17} />
+                <ArrowRight size={16} />
               </button>
 
               <button
@@ -313,16 +342,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                   backgroundColor: viewMode === '3d' ? 'var(--color-plum-900)' : 'rgba(255, 255, 255, 0.12)',
                   backdropFilter: 'blur(12px)',
                   color: '#ffffff',
-                  padding: '14px 24px',
+                  padding: '12px 22px',
                   borderRadius: '8px',
                   fontWeight: 600,
-                  fontSize: '0.88rem',
+                  fontSize: '0.84rem',
                   border: '1px solid rgba(255, 255, 255, 0.25)',
                   transition: 'all 0.25s ease',
                   cursor: 'pointer',
+                  minHeight: '44px',
                 }}
               >
-                <Box size={17} color="var(--color-gold)" />
+                <Box size={16} color="var(--color-gold)" />
                 <span>{viewMode === '3d' ? 'FULLSCREEN 3D STUDIO' : 'EXPLORE 3D STUDIO'}</span>
               </button>
 
@@ -336,14 +366,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                     backgroundColor: 'rgba(212, 175, 55, 0.2)',
                     border: '1px solid rgba(212, 175, 55, 0.4)',
                     color: '#d4af37',
-                    padding: '14px 18px',
-                    borderRadius: '6px',
+                    padding: '12px 18px',
+                    borderRadius: '8px',
                     fontWeight: 700,
-                    fontSize: '0.82rem',
+                    fontSize: '0.8rem',
                     transition: 'all 0.25s ease',
+                    minHeight: '44px',
                   }}
                 >
-                  <Eye size={16} />
+                  <Eye size={15} />
                   <span>BACK TO LOOKBOOK</span>
                 </button>
               )}
@@ -354,29 +385,30 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '24px',
-                marginTop: '32px',
-                paddingTop: '20px',
+                gap: '16px',
+                marginTop: '26px',
+                paddingTop: '16px',
                 borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+                flexWrap: 'wrap',
               }}
             >
               <div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#d4af37' }}>5,000+</div>
-                <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.75)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.35rem)', fontWeight: 800, color: '#d4af37' }}>5,000+</div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.75)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Curated Pieces
                 </div>
               </div>
-              <div style={{ width: '1px', height: '28px', backgroundColor: 'rgba(255, 255, 255, 0.18)' }} />
+              <div style={{ width: '1px', height: '24px', backgroundColor: 'rgba(255, 255, 255, 0.18)' }} />
               <div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#d4af37' }}>10-Year</div>
-                <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.75)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.35rem)', fontWeight: 800, color: '#d4af37' }}>10-Year</div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.75)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Craft Guarantee
                 </div>
               </div>
-              <div style={{ width: '1px', height: '28px', backgroundColor: 'rgba(255, 255, 255, 0.18)' }} />
+              <div style={{ width: '1px', height: '24px', backgroundColor: 'rgba(255, 255, 255, 0.18)' }} />
               <div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#d4af37' }}>100%</div>
-                <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.75)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.35rem)', fontWeight: 800, color: '#d4af37' }}>100%</div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.75)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Hand-Inspected
                 </div>
               </div>
@@ -384,9 +416,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
           </div>
 
           {/* Right Column: 3D Studio (in 3D mode) OR Featured Spotlight Overlay (in Lookbook mode) */}
-          <div style={{ minHeight: '380px', position: 'relative' }}>
+          <div style={{ minHeight: '340px', position: 'relative' }} className="hidden-mobile">
             {viewMode === '3d' ? (
-              <div style={{ minHeight: '420px', height: '100%' }}>
+              <div style={{ minHeight: '380px', height: '100%' }}>
                 <Hero3DViewer onExploreFull={onOpen3DStudio} />
               </div>
             ) : (
@@ -403,29 +435,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                 {/* Floating Glassmorphic Slide Card Badge */}
                 <div
                   style={{
-                    backgroundColor: 'rgba(26, 8, 36, 0.75)',
+                    backgroundColor: 'rgba(26, 8, 36, 0.78)',
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
                     border: '1px solid rgba(255, 255, 255, 0.18)',
                     borderRadius: '16px',
-                    padding: '18px 24px',
-                    maxWidth: '360px',
+                    padding: '16px 20px',
+                    maxWidth: '340px',
                     boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)',
                     animation: 'fadeIn 0.4s ease-out',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#d4af37', letterSpacing: '1px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#d4af37', letterSpacing: '1px' }}>
                       COLLECTION 0{currentSlideIndex + 1} / 0{HERO_SLIDES.length}
                     </span>
-                    <span style={{ fontSize: '0.68rem', color: '#e0aaff', background: 'rgba(142, 45, 226, 0.3)', padding: '2px 8px', borderRadius: '10px' }}>
+                    <span style={{ fontSize: '0.65rem', color: '#e0aaff', background: 'rgba(142, 45, 226, 0.3)', padding: '2px 8px', borderRadius: '10px' }}>
                       AUTO-SCROLL
                     </span>
                   </div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', marginBottom: '3px' }}>
                     {currentSlide.title}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.75)', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.75)', lineHeight: 1.4 }}>
                     Photographed in high architectural fidelity with true-to-life lighting.
                   </div>
                 </div>
@@ -437,13 +469,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
         {/* Bottom Carousel Controls & Slide Indicator Pills */}
         <div
           style={{
-            marginTop: '36px',
+            marginTop: '28px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: '16px',
-            paddingTop: '20px',
+            gap: '12px',
+            paddingTop: '16px',
             borderTop: '1px solid rgba(255, 255, 255, 0.12)',
           }}
         >
@@ -452,8 +484,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
             <button
               onClick={handlePrevSlide}
               style={{
-                width: '38px',
-                height: '38px',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.12)',
                 backdropFilter: 'blur(10px)',
@@ -467,14 +499,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
               title="Previous slide"
               aria-label="Previous slide"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
 
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               style={{
-                width: '38px',
-                height: '38px',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
                 backgroundColor: isPlaying ? 'rgba(255, 255, 255, 0.12)' : 'var(--color-plum-700)',
                 backdropFilter: 'blur(10px)',
@@ -488,14 +520,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
               title={isPlaying ? 'Pause Auto-Scroll' : 'Resume Auto-Scroll'}
               aria-label={isPlaying ? 'Pause Auto-Scroll' : 'Resume Auto-Scroll'}
             >
-              {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+              {isPlaying ? <Pause size={14} /> : <Play size={14} />}
             </button>
 
             <button
               onClick={handleNextSlide}
               style={{
-                width: '38px',
-                height: '38px',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.12)',
                 backdropFilter: 'blur(10px)',
@@ -509,16 +541,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
               title="Next slide"
               aria-label="Next slide"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
 
-            <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.7)', marginLeft: '8px' }}>
+            <span style={{ fontSize: '0.74rem', color: 'rgba(255, 255, 255, 0.7)', marginLeft: '4px' }}>
               {currentSlideIndex + 1} / {HERO_SLIDES.length}
             </span>
           </div>
 
           {/* Center / Right: Interactive Slide Thumbnail Pills with Live Progress Bar */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', overflowX: 'auto', maxWidth: '100%', paddingBottom: '4px' }}>
             {HERO_SLIDES.map((slide, idx) => {
               const isCurrent = idx === currentSlideIndex;
               return (
@@ -528,18 +560,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '6px 14px',
-                    borderRadius: '24px',
+                    gap: '6px',
+                    padding: '5px 12px',
+                    borderRadius: '20px',
                     backgroundColor: isCurrent ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.06)',
                     border: isCurrent ? '1.5px solid #d4af37' : '1px solid rgba(255, 255, 255, 0.15)',
                     color: isCurrent ? '#ffffff' : 'rgba(255, 255, 255, 0.7)',
-                    fontSize: '0.76rem',
+                    fontSize: '0.72rem',
                     fontWeight: isCurrent ? 700 : 500,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     position: 'relative',
                     overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
                   }}
                   aria-label={`Go to slide ${idx + 1}: ${slide.title}`}
                 >
@@ -560,8 +594,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
                   )}
                   <span
                     style={{
-                      width: '8px',
-                      height: '8px',
+                      width: '7px',
+                      height: '7px',
                       borderRadius: '50%',
                       backgroundColor: isCurrent ? '#d4af37' : 'rgba(255, 255, 255, 0.4)',
                     }}
@@ -576,4 +610,5 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onShopNow, onOpen3DStu
     </section>
   );
 };
+
 

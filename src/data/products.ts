@@ -79,7 +79,7 @@ export const PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
       'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?auto=format&fit=crop&w=1200&q=80'
+      'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1200&q=80'
     ],
     description: 'Solid engineered slat support system eliminates the need for a box spring while the deep padded headboard provides plush support for reading in bed.',
     longDescription: 'Featuring acoustic-dampened slat rails that ensure noiseless rest. Available in heavy linen blend and velvet finishes with tapered wooden corner posts.',
@@ -137,9 +137,9 @@ export const PRODUCTS: Product[] = [
     discountPercent: 14,
     rating: 5,
     reviewsCount: 310,
-    image: 'https://images.unsplash.com/photo-1580481077197-285b0cb046b4?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=800&q=80',
     galleryImages: [
-      'https://images.unsplash.com/photo-1580481077197-285b0cb046b4?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80',
       'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=1200&q=80'
     ],
     description: 'Engineered for 12+ hours of continuous comfort with breathable elastomeric mesh, multi-angle tilt lock, and pneumatic seat height adjustment.',

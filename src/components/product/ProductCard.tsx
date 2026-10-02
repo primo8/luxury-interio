@@ -4,6 +4,7 @@ import { StarRating } from './StarRating';
 import { Box, Eye, Heart, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { SafeImage } from '../common/SafeImage';
 
 interface ProductCardProps {
   product: Product;
@@ -107,6 +108,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           backgroundColor: '#f8f6f9',
           overflow: 'hidden',
           cursor: 'pointer',
+          borderRadius: '10px',
         }}
         onClick={() => onOpenQuickView(product)}
       >
@@ -115,14 +117,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div
             style={{
               position: 'absolute',
-              top: '12px',
-              left: '12px',
+              top: '10px',
+              left: '10px',
               backgroundColor: badge.bg,
               color: badge.color,
-              fontSize: '0.68rem',
+              fontSize: '0.66rem',
               fontWeight: 700,
-              letterSpacing: '0.6px',
-              padding: '4px 9px',
+              letterSpacing: '0.5px',
+              padding: '3px 8px',
               borderRadius: '6px',
               zIndex: 10,
               boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
@@ -137,10 +139,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onClick={handleWishlistToggle}
           style={{
             position: 'absolute',
-            top: '12px',
-            right: '12px',
-            width: '36px',
-            height: '36px',
+            top: '10px',
+            right: '10px',
+            width: '34px',
+            height: '34px',
             borderRadius: '50%',
             backgroundColor: isFavorited ? '#fff1f2' : 'rgba(255, 255, 255, 0.92)',
             color: isFavorited ? '#e63946' : 'var(--color-plum-900)',
@@ -154,37 +156,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           }}
           aria-label={isFavorited ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         >
-          <Heart size={16} fill={isFavorited ? '#e63946' : 'none'} strokeWidth={isFavorited ? 2.5 : 2} />
+          <Heart size={15} fill={isFavorited ? '#e63946' : 'none'} strokeWidth={isFavorited ? 2.5 : 2} />
         </button>
 
         {/* Product Image with Smooth Luxury Scale on Hover */}
-        <img
+        <SafeImage
           src={product.image}
           alt={product.name}
+          fallbackSrc="/hero-chair.jpg"
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
             transform: isHovered ? 'scale(1.06)' : 'scale(1)',
+            transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
-          loading="lazy"
         />
 
-        {/* Floating Quick Action Bar (3D & Quick View) */}
+        {/* Floating Quick Action Bar (3D & Quick View) - visible on hover for desktop */}
         <div
           style={{
             position: 'absolute',
-            bottom: '12px',
+            bottom: '10px',
             left: '50%',
             transform: isHovered ? 'translate(-50%, 0)' : 'translate(-50%, 14px)',
             opacity: isHovered ? 1 : 0,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            backgroundColor: 'rgba(255, 255, 255, 0.94)',
+            gap: '6px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
-            padding: '5px 10px',
+            padding: '4px 8px',
             borderRadius: '30px',
             boxShadow: '0 8px 24px rgba(37, 13, 51, 0.18)',
             transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -192,27 +191,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             pointerEvents: isHovered ? 'auto' : 'none',
           }}
           onClick={(e) => e.stopPropagation()}
+          className="hidden-mobile"
         >
           <button
             onClick={() => onOpen3D(product)}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
-              padding: '5px 10px',
+              gap: '4px',
+              padding: '4px 8px',
               borderRadius: '20px',
               backgroundColor: 'var(--color-plum-800)',
               color: '#ffffff',
-              fontSize: '0.72rem',
+              fontSize: '0.68rem',
               fontWeight: 700,
               letterSpacing: '0.4px',
-              transition: 'opacity 0.15s ease',
             }}
             title="Inspect in 3D Studio"
             aria-label={`View ${product.name} in 3D Studio`}
           >
-            <Box size={13} />
-            <span>3D VIEW</span>
+            <Box size={12} />
+            <span>3D</span>
           </button>
 
           <button
@@ -220,39 +219,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
-              padding: '5px 10px',
+              gap: '4px',
+              padding: '4px 8px',
               borderRadius: '20px',
               backgroundColor: '#f1eaf6',
               color: 'var(--color-plum-900)',
-              fontSize: '0.72rem',
+              fontSize: '0.68rem',
               fontWeight: 600,
-              transition: 'background-color 0.15s ease',
             }}
             title="Quick Details"
             aria-label={`Quick details for ${product.name}`}
           >
-            <Eye size={13} />
+            <Eye size={12} />
             <span>PREVIEW</span>
           </button>
         </div>
       </div>
 
       {/* 2. Product Meta & Information */}
-      <div style={{ padding: '16px 16px 14px 16px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+      <div style={{ padding: '12px 10px 12px 10px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
         <div>
           {/* Category & Room Eyebrow */}
           <div
             style={{
-              fontSize: '0.72rem',
+              fontSize: '0.68rem',
               fontWeight: 600,
               textTransform: 'uppercase',
-              letterSpacing: '0.8px',
+              letterSpacing: '0.6px',
               color: 'var(--color-text-light)',
-              marginBottom: '4px',
+              marginBottom: '3px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
-            {product.category} · {product.room}
+            {product.category}
           </div>
 
           {/* Product Name */}
@@ -260,31 +261,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onClick={() => onOpenQuickView(product)}
             style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: '1.02rem',
+              fontSize: 'clamp(0.88rem, 2.8vw, 1rem)',
               fontWeight: 600,
               color: 'var(--color-text-main)',
-              marginBottom: '6px',
+              marginBottom: '4px',
               cursor: 'pointer',
-              lineHeight: 1.35,
-              transition: 'color 0.2s ease',
+              lineHeight: 1.3,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              minHeight: '2.6em',
             }}
           >
             {product.name}
           </h3>
 
           {/* Rating & Reviews */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
             <StarRating rating={product.rating} />
-            <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
               ({product.reviewsCount})
             </span>
           </div>
 
           {/* Pricing Row */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '10px' }}>
             <span
               style={{
-                fontSize: '1.15rem',
+                fontSize: '1.05rem',
                 fontWeight: 700,
                 color: 'var(--color-plum-900)',
                 fontFamily: 'var(--font-sans)',
@@ -295,7 +300,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.originalPrice && (
               <span
                 style={{
-                  fontSize: '0.86rem',
+                  fontSize: '0.8rem',
                   color: 'var(--color-text-light)',
                   textDecoration: 'line-through',
                 }}
@@ -307,7 +312,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* 3. TWO DISTINCT PURCHASE ACTIONS */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', paddingTop: '6px' }}>
+        <div className="product-card-actions">
           {/* Action 1: ADD TO CART */}
           <button
             onClick={handleAddToCart}
@@ -315,22 +320,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              padding: '10px 8px',
+              gap: '4px',
+              padding: '8px 6px',
               borderRadius: '8px',
               backgroundColor: '#f4edf8',
               color: 'var(--color-plum-900)',
               border: '1px solid rgba(59, 24, 79, 0.12)',
-              fontSize: '0.78rem',
+              fontSize: '0.74rem',
               fontWeight: 700,
-              letterSpacing: '0.4px',
+              letterSpacing: '0.3px',
               transition: 'all 0.2s ease',
               cursor: 'pointer',
+              minHeight: '36px',
             }}
+            className="product-card-btn-text"
             title="Add item to shopping bag"
             aria-label={`Add ${product.name} to cart`}
           >
-            <ShoppingBag size={14} />
+            <ShoppingBag size={13} />
             <span>ADD TO CART</span>
           </button>
 
@@ -341,26 +348,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              padding: '10px 8px',
+              gap: '4px',
+              padding: '8px 6px',
               borderRadius: '8px',
               backgroundColor: 'var(--color-plum-800)',
               color: '#ffffff',
-              fontSize: '0.78rem',
+              fontSize: '0.74rem',
               fontWeight: 700,
-              letterSpacing: '0.4px',
+              letterSpacing: '0.3px',
               transition: 'all 0.2s ease',
               cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(37, 13, 51, 0.18)',
+              minHeight: '36px',
             }}
+            className="product-card-btn-text"
             title="Buy this piece immediately"
             aria-label={`Buy ${product.name} now`}
           >
             <span>BUY NOW</span>
-            <ArrowRight size={13} />
+            <ArrowRight size={12} />
           </button>
         </div>
       </div>
     </div>
   );
 };
+

@@ -5,6 +5,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useUserAuth } from '../../context/UserAuthContext';
 import { PRODUCTS } from '../../data/products';
 import { IS_CLIENT_MODE } from '../../config/appMode';
+import { SafeImage } from '../common/SafeImage';
 import type { Product, RoomType } from '../../types';
 
 interface HeaderProps {
@@ -105,29 +106,25 @@ export const Header: React.FC<HeaderProps> = ({
       }}
     >
       <div
-        className="container"
+        className="container header-grid"
         style={{
-          display: 'grid',
-          gridTemplateColumns: '260px 1fr 280px',
-          alignItems: 'center',
-          paddingTop: '16px',
-          paddingBottom: '16px',
-          gap: '24px',
+          paddingTop: '12px',
+          paddingBottom: '12px',
         }}
       >
         {/* Left: Luxury Wordmark & Mobile Menu Trigger */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={onOpenMobileMenu}
             style={{
-              display: 'none',
               padding: '6px',
               color: 'var(--color-plum-950)',
+              borderRadius: '8px',
             }}
             className="show-mobile-flex"
             aria-label="Open mobile navigation menu"
           >
-            <Menu size={24} />
+            <Menu size={22} />
           </button>
 
           <a
@@ -141,9 +138,9 @@ export const Header: React.FC<HeaderProps> = ({
             <span
               style={{
                 fontFamily: 'var(--font-cinzel)',
-                fontSize: '1.5rem',
+                fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)',
                 fontWeight: 700,
-                letterSpacing: '2.5px',
+                letterSpacing: '2px',
                 color: 'var(--color-plum-950)',
                 lineHeight: 1,
               }}
@@ -152,12 +149,12 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
             <span
               style={{
-                fontSize: '0.64rem',
+                fontSize: '0.62rem',
                 fontWeight: 700,
-                letterSpacing: '2px',
+                letterSpacing: '1.8px',
                 color: 'var(--color-gold)',
                 textTransform: 'uppercase',
-                marginTop: '3px',
+                marginTop: '2px',
               }}
             >
               Luxury Showroom
@@ -331,11 +328,13 @@ export const Header: React.FC<HeaderProps> = ({
                         transition: 'background-color 0.15s',
                       }}
                     >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                      />
+                      <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+                        <SafeImage
+                          src={product.image}
+                          alt={product.name}
+                          fallbackSrc="/hero-chair.jpg"
+                        />
+                      </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--color-text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {product.name}
@@ -376,7 +375,9 @@ export const Header: React.FC<HeaderProps> = ({
                           cursor: 'pointer',
                         }}
                       >
-                        <img src={p.image} alt={p.name} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover' }} />
+                        <div style={{ width: '40px', height: '40px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0 }}>
+                          <SafeImage src={p.image} alt={p.name} fallbackSrc="/hero-chair.jpg" />
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <span style={{ fontSize: '0.84rem', fontWeight: 600, display: 'block' }}>{p.name}</span>
                           <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>${p.price}</span>
@@ -440,17 +441,17 @@ export const Header: React.FC<HeaderProps> = ({
             title={customer ? `Signed in as ${customer.fullName}` : 'Sign in / Client Portal'}
           >
             {customer?.photoURL ? (
-              <img
-                src={customer.photoURL}
-                alt={customer.fullName}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid var(--color-gold)',
-                }}
-              />
+              <div style={{ width: '38px', height: '38px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--color-gold)', flexShrink: 0 }}>
+                <SafeImage
+                  src={customer.photoURL}
+                  alt={customer.fullName}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              </div>
             ) : (
               <div
                 style={{

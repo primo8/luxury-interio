@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useUserAuth } from '../../context/UserAuthContext';
+import { SafeImage } from '../common/SafeImage';
 
 export const CustomerAuthModal: React.FC = () => {
   const {
@@ -872,11 +873,13 @@ export const CustomerAuthModal: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   {customer.photoURL ? (
-                    <img
-                      src={customer.photoURL}
-                      alt={customer.fullName}
-                      style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-gold)' }}
-                    />
+                    <div style={{ width: '52px', height: '52px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--color-gold)', flexShrink: 0 }}>
+                      <SafeImage
+                        src={customer.photoURL}
+                        alt={customer.fullName}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
                   ) : (
                     <div
                       style={{
@@ -1167,7 +1170,9 @@ export const CustomerAuthModal: React.FC = () => {
                         {order.items.map((item, idx) => (
                           <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f9f6fa', padding: '4px 8px', borderRadius: '6px', flexShrink: 0 }}>
                             {item.image && (
-                              <img src={item.image} alt={item.productName} style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover' }} />
+                              <div style={{ width: '28px', height: '28px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
+                                <SafeImage src={item.image} alt={item.productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
                             )}
                             <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
                               {item.productName} × {item.quantity}

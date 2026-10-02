@@ -31,7 +31,7 @@ export const CATEGORIES: Category[] = [
     count: 18,
     roomKey: 'office',
     description: 'Ergonomic executive chairs, solid wood writing desks, and modular storage.',
-    image: 'https://images.unsplash.com/photo-1580481077197-285b0cb046b4?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 'cat-storage',

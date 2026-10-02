@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Truck, Tag, ShieldCheck, Lock } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { SafeImage } from '../common/SafeImage';
 
 interface CartDrawerProps {
   onProceedToCheckout: () => void;
@@ -59,8 +60,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onProceedToCheckout, onE
     >
       <div
         style={{
-          width: '460px',
-          maxWidth: '92vw',
+          width: '100%',
+          maxWidth: '460px',
           height: '100%',
           backgroundColor: '#ffffff',
           display: 'flex',
@@ -254,7 +255,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onProceedToCheckout, onE
                       flexShrink: 0,
                     }}
                   >
-                    <img
+                    <SafeImage
                       src={item.product.image}
                       alt={item.product.name}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}

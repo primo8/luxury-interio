@@ -46,40 +46,40 @@ export const DealOfTheWeek: React.FC<DealOfTheWeekProps> = ({
   const dealProducts = PRODUCTS.filter((p) => p.discountPercent && p.discountPercent >= 10);
 
   return (
-    <section id="deal-of-the-week" style={{ padding: '60px 0 80px 0', backgroundColor: '#fcfaff' }}>
+    <section id="deal-of-the-week" style={{ padding: '40px 0 60px 0', backgroundColor: '#fcfaff' }}>
       <div className="container">
         {/* Section Header with Countdown Timer */}
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               color: 'var(--color-plum-800)',
-              fontSize: '0.78rem',
+              fontSize: '0.74rem',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '1.2px',
               marginBottom: '6px',
             }}
           >
-            <Sparkles size={15} color="var(--color-gold)" />
+            <Sparkles size={14} color="var(--color-gold)" />
             <span>EXCLUSIVITY & LIMITED PROMOTION</span>
           </div>
 
           <h2
             style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: '2.3rem',
+              fontSize: 'clamp(1.7rem, 3.8vw, 2.3rem)',
               fontWeight: 700,
               color: 'var(--color-plum-950)',
-              marginBottom: '8px',
+              marginBottom: '6px',
             }}
           >
             Curated Deal Of The Week
           </h2>
 
-          <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '22px' }}>
+          <p style={{ fontSize: 'clamp(0.82rem, 2vw, 0.9rem)', color: 'var(--color-text-muted)', marginBottom: '18px' }}>
             Handpicked signature designs available for a limited curation period.
           </p>
 
@@ -88,47 +88,41 @@ export const DealOfTheWeek: React.FC<DealOfTheWeekProps> = ({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '14px',
+              gap: 'clamp(8px, 2.5vw, 14px)',
               background: 'var(--color-plum-950)',
-              padding: '10px 24px',
+              padding: '8px clamp(12px, 3.5vw, 22px)',
               borderRadius: '40px',
               boxShadow: '0 8px 24px rgba(37, 13, 51, 0.22)',
+              maxWidth: '100%',
             }}
           >
-            <Clock size={18} color="var(--color-gold)" />
-            <div style={{ display: 'flex', gap: '12px', color: '#ffffff', fontWeight: 700 }}>
+            <Clock size={16} color="var(--color-gold)" style={{ flexShrink: 0 }} />
+            <div style={{ display: 'flex', gap: 'clamp(6px, 2vw, 12px)', color: '#ffffff', fontWeight: 700, alignItems: 'center' }}>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: '1.1rem', color: 'var(--color-gold)' }}>{String(timeLeft.days).padStart(2, '0')}</span>
-                <span style={{ fontSize: '0.62rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Days</span>
+                <span style={{ fontSize: 'clamp(0.95rem, 2.8vw, 1.1rem)', color: 'var(--color-gold)' }}>{String(timeLeft.days).padStart(2, '0')}</span>
+                <span style={{ fontSize: '0.58rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Days</span>
               </div>
-              <span style={{ color: 'var(--color-gold)', opacity: 0.6 }}>:</span>
+              <span style={{ color: 'var(--color-gold)', opacity: 0.6, fontSize: '0.85rem' }}>:</span>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: '1.1rem', color: 'var(--color-gold)' }}>{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span style={{ fontSize: '0.62rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Hours</span>
+                <span style={{ fontSize: 'clamp(0.95rem, 2.8vw, 1.1rem)', color: 'var(--color-gold)' }}>{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span style={{ fontSize: '0.58rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Hours</span>
               </div>
-              <span style={{ color: 'var(--color-gold)', opacity: 0.6 }}>:</span>
+              <span style={{ color: 'var(--color-gold)', opacity: 0.6, fontSize: '0.85rem' }}>:</span>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: '1.1rem', color: 'var(--color-gold)' }}>{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span style={{ fontSize: '0.62rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Mins</span>
+                <span style={{ fontSize: 'clamp(0.95rem, 2.8vw, 1.1rem)', color: 'var(--color-gold)' }}>{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span style={{ fontSize: '0.58rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Mins</span>
               </div>
-              <span style={{ color: 'var(--color-gold)', opacity: 0.6 }}>:</span>
+              <span style={{ color: 'var(--color-gold)', opacity: 0.6, fontSize: '0.85rem' }}>:</span>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: '1.1rem', color: 'var(--color-gold)' }}>{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span style={{ fontSize: '0.62rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Secs</span>
+                <span style={{ fontSize: 'clamp(0.95rem, 2.8vw, 1.1rem)', color: 'var(--color-gold)' }}>{String(timeLeft.seconds).padStart(2, '0')}</span>
+                <span style={{ fontSize: '0.58rem', display: 'block', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Secs</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Deals Product Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '24px',
-          }}
-          className="deals-grid"
-        >
+        <div className="deals-grid">
           {dealProducts.slice(0, 6).map((product) => (
             <ProductCard
               key={product.id}
@@ -144,3 +138,4 @@ export const DealOfTheWeek: React.FC<DealOfTheWeekProps> = ({
     </section>
   );
 };
+

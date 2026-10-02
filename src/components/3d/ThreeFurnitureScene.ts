@@ -31,6 +31,7 @@ export class Furniture3DScene {
   private rotationMomentum = { x: 0, y: 0 };
   private cameraDistance = 4.8;
   private targetCameraDistance = 4.8;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(container: HTMLElement, options: FurnitureSceneOptions) {
     this.container = container;
@@ -42,6 +43,13 @@ export class Furniture3DScene {
       secondaryColor: 0x250d33,
       ...options
     };
+
+    if (typeof ResizeObserver !== 'undefined' && this.container) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.onResize();
+      });
+      this.resizeObserver.observe(this.container);
+    }
 
     // 1. Scene setup
     this.scene = new THREE.Scene();
@@ -692,6 +700,10 @@ export class Furniture3DScene {
   public dispose() {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
+    }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
     }
     window.removeEventListener('resize', this.onResize);
     this.renderer.dispose();
